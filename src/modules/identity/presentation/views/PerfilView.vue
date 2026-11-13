@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { confirmar } from '@/shared/composables/useConfirm'
+import { useTamanhoTexto } from '@/shared/composables/useTamanhoTexto'
 import { toast } from '@/shared/composables/useToast'
 import { formatarData } from '@/shared/lib/datas'
 import { FormInput } from '@/shared/ui'
@@ -18,6 +19,7 @@ import { formatarTelefone, mascararTelefone } from '../../domain/Telefone'
 import { useSessionStore } from '../stores/session'
 
 const session = useSessionStore()
+const { textoGrande } = useTamanhoTexto()
 
 // --- dados
 const dados = reactive({ nome: '', telefone: '' })
@@ -184,9 +186,16 @@ async function desistirExclusao() {
 
     <Card>
       <CardHeader>
-        <CardTitle>Lembretes</CardTitle>
+        <CardTitle>Preferências</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent class="flex flex-col gap-5">
+        <Field orientation="horizontal">
+          <Switch id="perfil-texto" v-model="textoGrande" />
+          <FieldLabel for="perfil-texto" class="flex-col items-start gap-0.5 font-normal">
+            <span class="font-medium">Texto maior</span>
+            <span class="text-sm text-muted-foreground">Aumenta letras e botões neste aparelho.</span>
+          </FieldLabel>
+        </Field>
         <Field orientation="horizontal">
           <Switch
             id="perfil-lembretes"

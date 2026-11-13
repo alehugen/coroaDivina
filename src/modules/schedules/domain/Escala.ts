@@ -143,6 +143,22 @@ export function ocupacao(f: Pick<FuncaoDoDia, 'vagasResp' | 'vagasAux' | 'inscri
 export const percentual = (ocupadas: number, vagas: number) =>
   vagas ? Math.min(100, Math.round((ocupadas / vagas) * 100)) : 0
 
+export interface Preenchimento {
+  ocupadas: number
+  vagas: number
+  /** 0–100 */
+  pct: number
+  completo: boolean
+}
+
+/** Preenchimento de um conjunto de funções (só as ativas contam). */
+export function preenchimento(funcoes: FuncaoDoDia[]): Preenchimento {
+  const os = funcoes.filter((f) => f.ativa).map(ocupacao)
+  const vagas = os.reduce((n, o) => n + o.vagas, 0)
+  const ocupadas = os.reduce((n, o) => n + Math.min(o.total, o.vagas), 0)
+  return { ocupadas, vagas, pct: percentual(ocupadas, vagas), completo: vagas > 0 && ocupadas >= vagas }
+}
+
 /** Agrupa as funções de um dia por área (ordem da área, depois da função). */
 export function funcoesPorArea(funcoes: FuncaoDoDia[]): { area: AreaRef; funcoes: FuncaoDoDia[] }[] {
   const mapa = new Map<string, { area: AreaRef; funcoes: FuncaoDoDia[] }>()

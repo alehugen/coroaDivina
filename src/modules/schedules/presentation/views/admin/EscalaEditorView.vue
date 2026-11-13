@@ -23,10 +23,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Spinner } from '@/components/ui/spinner'
 import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
-import { EmptyState } from '@/shared/ui'
+import { CarregandoConteudo, EmptyState } from '@/shared/ui'
 import { escalas } from '../../..'
 import { rotuloPeriodo, STATUS_INFO, TRANSICOES, type Transicao } from '../../../domain/Escala'
 import DiasTabs from '../../components/DiasTabs.vue'
@@ -115,9 +114,7 @@ const modalDia = ref(false)
       <RouterLink to="/admin/escalas"><PhArrowLeft /> Escalas</RouterLink>
     </Button>
 
-    <div v-if="store.carregando && !store.escala" class="flex justify-center py-12 text-primary">
-      <Spinner class="size-6" />
-    </div>
+    <CarregandoConteudo v-if="store.carregando && !store.escala" forma="grade" />
 
     <Alert v-else-if="store.erro && !store.escala" variant="destructive">
       <PhWarningCircle />

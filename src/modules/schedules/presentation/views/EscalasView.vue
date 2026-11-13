@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { PhArrowRight, PhCalendarBlank, PhListBullets, PhWarningCircle, PhCalendarDots } from '@phosphor-icons/vue'
+import { PhArrowRight, PhCalendarDots, PhListBullets, PhWarningCircle } from '@phosphor-icons/vue'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { hojeISO, type DataISO } from '@/shared/lib/datas'
-import { EmptyState } from '@/shared/ui'
+import { hojeISO, somarDias, type DataISO } from '@/shared/lib/datas'
+import { CarregandoConteudo, EmptyState } from '@/shared/ui'
 import { escalas } from '../..'
 import { eventosPorData } from '../../domain/Calendario'
 import { percentual, rotuloPeriodo, type EscalaComResumo } from '../../domain/Escala'
-import type { MinhaInscricao } from '../../domain/Inscricao'
+import { agruparPorData, type MinhaInscricao } from '../../domain/Inscricao'
 import CalendarioEscalas from '../components/CalendarioEscalas.vue'
+import ProximoCompromisso from '../components/ProximoCompromisso.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 
 const lista = ref<EscalaComResumo[]>([])
@@ -50,6 +50,12 @@ const anteriores = computed(() =>
 const visiveis = computed(() => (filtro.value === 'atuais' ? atuais.value : anteriores.value))
 
 const eventos = computed(() => eventosPorData(dias.value, lista.value, minhas.value))
+
+/** Compromisso do sócio nos próximos 7 dias (cartão no topo). */
+const proximo = computed(() => {
+  const g = agruparPorData(minhas.value, hoje).proximas[0]
+  return g && g.data <= somarDias(hoje, 7) ? g : null
+})
 </script>
 
 <template>
@@ -78,20 +84,20 @@ const eventos = computed(() => eventosPorData(dias.value, lista.value, minhas.va
       </div>
     </div>
 
+    <ProximoCompromisso v-if="proximo" :data="proximo.data" :itens="proximo.itens" :hoje="hoje" />
+
     <Alert v-if="erro" variant="destructive">
       <PhWarningCircle />
       <AlertDescription>{{ erro }}</AlertDescription>
     </Alert>
 
-    <div v-if="carregando" class="flex justify-center py-12 text-primary">
-      <Spinner class="size-6" />
-    </div>
+    <CarregandoConteudo v-if="carregando" forma="cards" />
 
     <CalendarioEscalas v-else-if="modo === 'calendario'" :eventos="eventos" :hoje="hoje" />
 
     <EmptyState
       v-else-if="!visiveis.length"
-      :icone="PhCalendarBlank"
+      coroa
       :titulo="filtro === 'atuais' ? 'Nenhuma escala no momento' : 'Nenhuma escala anterior'"
       :descricao="
         filtro === 'atuais'

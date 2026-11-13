@@ -8,7 +8,7 @@ import {
   PhUserCircle,
 } from '@phosphor-icons/vue'
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,6 +33,9 @@ const links = computed(() =>
     { to: '/admin', label: 'Administração', icone: PhGearSix, visivel: session.gestor },
   ].filter((l) => l.visivel),
 )
+
+const route = useRoute()
+const abaAtiva = computed(() => links.value.findIndex((l) => route.path.startsWith(l.to)))
 
 const instalarApp = ref<InstanceType<typeof InstalarApp>>()
 const { modo: modoInstalacao } = useInstalarApp()
@@ -102,24 +105,43 @@ async function sair() {
     <InstalarApp ref="instalarApp" />
 
     <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
-      <RouterView />
+      <!-- Troca de tela: a antiga sai para a esquerda e a nova entra (0,2s); some com "reduzir movimento" -->
+      <RouterView v-slot="{ Component, route: r }">
+        <Transition
+          mode="out-in"
+          enter-active-class="transition duration-200 ease-out motion-reduce:transition-none"
+          enter-from-class="opacity-0 translate-x-3"
+          leave-active-class="transition duration-150 ease-in motion-reduce:transition-none"
+          leave-to-class="opacity-0 -translate-x-3"
+        >
+          <component :is="Component" :key="r.matched[1]?.path ?? r.path" />
+        </Transition>
+      </RouterView>
     </main>
 
-    <!-- navegação inferior no celular -->
+    <!-- navegação inferior no celular, com pílula que desliza até a aba ativa -->
     <nav
-      class="fixed inset-x-0 bottom-0 z-20 flex border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      class="fixed inset-x-0 bottom-0 z-20 border-t bg-card/95 px-2 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden"
       aria-label="Principal"
     >
-      <RouterLink
-        v-for="l in links"
-        :key="l.to"
-        :to="l.to"
-        class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium text-muted-foreground"
-        active-class="!text-primary"
-      >
-        <component :is="l.icone" class="size-6" />
-        {{ l.label }}
-      </RouterLink>
+      <div class="relative flex">
+        <span
+          v-if="abaAtiva >= 0"
+          class="absolute inset-y-0 left-0 rounded-xl bg-accent transition-transform duration-300 ease-[cubic-bezier(.3,1.2,.4,1)] motion-reduce:transition-none"
+          :style="{ width: `${100 / links.length}%`, transform: `translateX(${abaAtiva * 100}%)` }"
+          aria-hidden="true"
+        />
+        <RouterLink
+          v-for="l in links"
+          :key="l.to"
+          :to="l.to"
+          class="relative flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium text-muted-foreground"
+          active-class="!text-primary"
+        >
+          <component :is="l.icone" class="size-6" :weight="route.path.startsWith(l.to) ? 'fill' : 'regular'" />
+          {{ l.label }}
+        </RouterLink>
+      </div>
     </nav>
   </div>
 </template>

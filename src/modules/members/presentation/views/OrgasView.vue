@@ -12,7 +12,7 @@ import { useSessionStore } from '@/modules/identity'
 import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
 import { formatarData, hojeISO } from '@/shared/lib/datas'
-import { EmptyState, FormInput, FormSelect, UserAvatar } from '@/shared/ui'
+import { CarregandoConteudo, EmptyState, FormInput, FormSelect, UserAvatar } from '@/shared/ui'
 import { membros } from '../..'
 import { fimSugerido, situacao, sobreposicoes, type Mandato, type SituacaoMandato } from '../../domain/Mandato'
 import { useMembersStore } from '../stores/members'
@@ -148,9 +148,7 @@ async function remover(m: Mandato) {
     </Card>
 
     <div class="flex flex-col gap-6">
-      <div v-if="store.carregandoMandatos && !store.mandatos.length" class="flex justify-center py-12 text-primary">
-        <Spinner class="size-6" />
-      </div>
+      <CarregandoConteudo v-if="store.carregandoMandatos && !store.mandatos.length" forma="lista" />
 
       <EmptyState
         v-else-if="!store.mandatos.length"

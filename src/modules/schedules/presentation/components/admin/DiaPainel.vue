@@ -11,6 +11,7 @@ import { funcoesPorArea, ocupacao, rotuloDia, type DiaEscala } from '../../../do
 import { useEscalaAtualStore } from '../../stores/escalaAtual'
 import AdicionarFuncaoDialog from './AdicionarFuncaoDialog.vue'
 import FuncaoDiaLinha from './FuncaoDiaLinha.vue'
+import ResumoDia from '../ResumoDia.vue'
 
 const props = defineProps<{ dia: DiaEscala; unicoDia: boolean }>()
 const emit = defineEmits<{ removido: [] }>()
@@ -68,11 +69,8 @@ const modalFuncao = ref(false)
 
 <template>
   <section class="flex flex-col gap-4">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h3 class="text-lg font-semibold">{{ rotuloDia(dia.data) }}</h3>
-        <p class="text-sm text-muted-foreground">{{ totais.ocupadas }} de {{ totais.vagas }} vagas preenchidas</p>
-      </div>
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <ResumoDia :dia="dia" class="min-w-0 flex-1" />
       <div class="flex gap-2">
         <Button variant="outline" size="lg" @click="modalFuncao = true"><PhPlus /> Função</Button>
         <Button v-if="!unicoDia" variant="destructive" size="lg" @click="removerDia"><PhTrash /> Remover dia</Button>

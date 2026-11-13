@@ -5,6 +5,7 @@ import {
   funcoesPorArea,
   ocupacao,
   percentual,
+  preenchimento,
   rotuloDia,
   rotuloDiaCurto,
   rotuloPeriodo,
@@ -41,6 +42,15 @@ describe('ocupação', () => {
   it('conta por papel e calcula vagas livres', () => {
     const o = ocupacao(funcao({ inscricoes: [insc('responsavel'), insc('auxiliar'), insc('auxiliar')] }))
     expect(o).toEqual({ resp: 1, aux: 2, livresResp: 0, livresAux: 2, total: 3, vagas: 5 })
+  })
+  it('preenchimento ignora funções inativas e excesso de inscritos', () => {
+    const p = preenchimento([
+      funcao({ vagasResp: 1, vagasAux: 1, inscricoes: [insc('responsavel')] }),
+      funcao({ ativa: false, inscricoes: [insc('auxiliar')] }),
+      funcao({ vagasResp: 0, vagasAux: 1, inscricoes: [insc('auxiliar'), insc('auxiliar')] }),
+    ])
+    expect(p).toEqual({ ocupadas: 2, vagas: 3, pct: 67, completo: false })
+    expect(preenchimento([]).completo).toBe(false)
   })
   it('percentual', () => {
     expect(percentual(3, 4)).toBe(75)

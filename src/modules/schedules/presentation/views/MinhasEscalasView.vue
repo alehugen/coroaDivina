@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { PhArrowRight, PhCalendarCheck, PhCaretDown, PhStar, PhWarningCircle } from '@phosphor-icons/vue'
+import { PhArrowRight, PhCaretDown, PhStar, PhWarningCircle } from '@phosphor-icons/vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
 import { hojeISO } from '@/shared/lib/datas'
-import { EmptyState } from '@/shared/ui'
+import { CarregandoConteudo, EmptyState } from '@/shared/ui'
 import { escalas } from '../..'
 import { rotuloDia } from '../../domain/Escala'
 import { agruparPorData, ROTULO_PAPEL, type MinhaInscricao } from '../../domain/Inscricao'
+import ProximoCompromisso from '../components/ProximoCompromisso.vue'
 
 const lista = ref<MinhaInscricao[]>([])
 const carregando = ref(true)
@@ -43,23 +43,31 @@ const grupos = computed(() => agruparPorData(lista.value, hoje))
       <AlertDescription>{{ erro }}</AlertDescription>
     </Alert>
 
-    <div v-if="carregando" class="flex justify-center py-12 text-primary">
-      <Spinner class="size-6" />
-    </div>
+    <CarregandoConteudo v-if="carregando" forma="lista" />
 
     <EmptyState
       v-else-if="!grupos.proximas.length"
-      :icone="PhCalendarCheck"
+      coroa
       titulo="Você não tem funções nos próximos dias"
-      descricao="Escolha suas funções em uma escala aberta."
+      descricao="Escolha um lugar livre numa escala aberta e ele aparece aqui."
     >
       <Button as-child>
         <RouterLink to="/escalas">Ver escalas <PhArrowRight data-icon="inline-end" /></RouterLink>
       </Button>
     </EmptyState>
 
-    <ol v-else class="flex flex-col gap-4">
-      <li v-for="g in grupos.proximas" :key="g.data" class="overflow-hidden rounded-xl border bg-card">
+    <ProximoCompromisso
+      v-if="!carregando && grupos.proximas[0]"
+      :data="grupos.proximas[0].data"
+      :itens="grupos.proximas[0].itens"
+      :hoje="hoje"
+    />
+
+    <h2 v-if="!carregando && grupos.proximas.length > 1" class="-mb-2 text-sm font-semibold text-muted-foreground">
+      Depois
+    </h2>
+    <ol v-if="!carregando && grupos.proximas.length > 1" class="flex flex-col gap-4">
+      <li v-for="g in grupos.proximas.slice(1)" :key="g.data" class="overflow-hidden rounded-xl border bg-card">
         <h2 class="flex items-center justify-between gap-2 border-b bg-muted/50 px-4 py-2.5 font-semibold sm:px-5">
           {{ rotuloDia(g.data) }}
           <Badge v-if="g.data === hoje" class="bg-highlight text-highlight-foreground">Hoje</Badge>

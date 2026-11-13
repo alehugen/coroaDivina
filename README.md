@@ -19,7 +19,8 @@ e painel de administração.
 ```
 src/
   app/            router (guards por perfil), layouts
-  components/ui/  componentes shadcn-vue (gerados pela CLI; `npx shadcn-vue@latest add <nome>`)
+  components/ui/  componentes shadcn-vue (gerados pela CLI; `npx shadcn-vue@latest add <nome>` —
+                  depois confira o diff de src/shared/styles/main.css: a CLI às vezes reinsere tokens/fontes padrão)
   shared/         componentes compostos do app (ui/), tema/tokens, supabase client, utilitários
   modules/
     identity/     cadastro, login, sessão        domain / application / infrastructure / presentation

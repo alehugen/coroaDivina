@@ -29,6 +29,8 @@
             mode === 'dark' ||
             (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)
           if (dark) document.documentElement.classList.add('dark')
+          if (localStorage.getItem('escalas-texto-grande') === 'true')
+            document.documentElement.classList.add('texto-grande')
         } catch (e) {}
       })()
     </script>

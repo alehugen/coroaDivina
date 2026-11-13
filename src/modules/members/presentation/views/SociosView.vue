@@ -3,12 +3,11 @@ import { PhMagnifyingGlass, PhUsers, PhWarningCircle } from '@phosphor-icons/vue
 import { computed, onMounted, ref, watch } from 'vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
-import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSessionStore } from '@/modules/identity'
 import { confirmar, type ConfirmOpcoes } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
-import { EmptyState } from '@/shared/ui'
+import { CarregandoConteudo, EmptyState } from '@/shared/ui'
 import { membros } from '../..'
 import {
   acoesPermitidas,
@@ -152,9 +151,7 @@ const TITULOS_VAZIO: Record<GrupoStatus, string> = {
       <AlertDescription>{{ store.erro }}</AlertDescription>
     </Alert>
 
-    <div v-if="store.carregandoSocios && !store.socios.length" class="flex justify-center py-12 text-primary">
-      <Spinner class="size-6" />
-    </div>
+    <CarregandoConteudo v-if="store.carregandoSocios && !store.socios.length" forma="lista" />
 
     <EmptyState
       v-else-if="!lista.length"

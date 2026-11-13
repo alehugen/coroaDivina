@@ -151,6 +151,14 @@
 }
 
 @layer base {
+  /* Leitura confortável (público mais velho): base 17px; "Texto maior" (Meu perfil) = 19px.
+     Como o Tailwind usa rem, espaçamentos e componentes acompanham. */
+  html {
+    font-size: 106.25%;
+  }
+  html.texto-grande {
+    font-size: 118.75%;
+  }
   * {
     @apply border-border outline-ring/50;
   }

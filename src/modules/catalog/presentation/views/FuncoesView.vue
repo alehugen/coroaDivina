@@ -19,12 +19,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
 import type { Result } from '@/shared/lib/result'
-import { EmptyState } from '@/shared/ui'
+import { CarregandoConteudo, EmptyState } from '@/shared/ui'
 import { catalogo } from '../..'
 import type { Area, AreaComFuncoes, FuncaoModelo } from '../../domain/Catalogo'
 import AreaFormDialog from '../components/AreaFormDialog.vue'
@@ -97,9 +96,7 @@ async function removerFuncao(f: FuncaoModelo) {
       <AlertDescription>{{ store.erro }}</AlertDescription>
     </Alert>
 
-    <div v-if="store.carregando && !store.grupos.length" class="flex justify-center py-12 text-primary">
-      <Spinner class="size-6" />
-    </div>
+    <CarregandoConteudo v-if="store.carregando && !store.grupos.length" forma="lista" />
 
     <EmptyState v-else-if="!store.grupos.length" :icone="PhListChecks" titulo="Nenhuma área cadastrada">
       <Button @click="editarArea(null)"><PhPlus /> Criar primeira área</Button>

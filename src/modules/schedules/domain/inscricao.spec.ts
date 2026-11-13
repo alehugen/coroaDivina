@@ -5,6 +5,7 @@ import {
   disponibilidade,
   minhaInscricao,
   podeCancelar,
+  rotuloQuando,
   type ContextoInscricao,
   type MinhaInscricao,
 } from './Inscricao'
@@ -78,6 +79,15 @@ describe('cancelamento', () => {
     expect(podeCancelar(ctx({ status: 'fechada' }))).toBe(false)
     expect(podeCancelar(ctx({ data: '2026-11-01' }))).toBe(false)
     expect(podeCancelar(ctx({ status: 'fechada', gestor: true }))).toBe(true)
+  })
+})
+
+describe('rotuloQuando', () => {
+  it('fala em linguagem simples', () => {
+    expect(rotuloQuando('2026-11-13', '2026-11-13')).toBe('Hoje, sexta-feira')
+    expect(rotuloQuando('2026-11-14', '2026-11-13')).toBe('Amanhã, sábado')
+    expect(rotuloQuando('2026-11-16', '2026-11-13')).toBe('Em 3 dias, segunda-feira')
+    expect(rotuloQuando('2026-12-03', '2026-11-13')).toBe('Quinta-feira, 03/12')
   })
 })
 

@@ -14,17 +14,17 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
 import { useSessionStore } from '@/modules/identity'
 import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
 import { hojeISO } from '@/shared/lib/datas'
-import { EmptyState } from '@/shared/ui'
+import { CarregandoConteudo, EmptyState } from '@/shared/ui'
 import { escalas } from '../..'
-import { funcoesPorArea, rotuloDia, rotuloPeriodo, type FuncaoDoDia, type Inscricao, type Papel } from '../../domain/Escala'
+import { funcoesPorArea, rotuloPeriodo, type FuncaoDoDia, type Inscricao, type Papel } from '../../domain/Escala'
 import { ROTULO_PAPEL, type ContextoInscricao } from '../../domain/Inscricao'
 import DiasTabs from '../components/DiasTabs.vue'
 import FuncaoInscricaoItem from '../components/FuncaoInscricaoItem.vue'
+import ResumoDia from '../components/ResumoDia.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import { useEscalaAtualStore } from '../stores/escalaAtual'
 
@@ -109,9 +109,7 @@ async function cancelar(f: FuncaoDoDia, i: Inscricao) {
       <RouterLink to="/escalas"><PhArrowLeft /> Escalas</RouterLink>
     </Button>
 
-    <div v-if="store.carregando && !store.escala" class="flex justify-center py-12 text-primary">
-      <Spinner class="size-6" />
-    </div>
+    <CarregandoConteudo v-if="store.carregando && !store.escala" forma="grade" />
 
     <Alert v-else-if="store.erro && !store.escala" variant="destructive">
       <PhWarningCircle />
@@ -182,7 +180,7 @@ async function cancelar(f: FuncaoDoDia, i: Inscricao) {
       <DiasTabs v-model="diaSelecionado" :dias="dias" :meu-id="meuId" />
 
       <section v-if="dia && ctx" class="flex flex-col gap-4">
-        <h2 class="text-lg font-semibold">{{ rotuloDia(dia.data) }}</h2>
+        <ResumoDia :key="dia.id" :dia="dia" />
 
         <Alert v-if="dia.observacoes">
           <PhInfo />

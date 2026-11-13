@@ -78,6 +78,22 @@ export interface MinhaInscricao {
   escalaStatus: StatusEscala
 }
 
+const DIAS_SEMANA = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado']
+
+/** Dias corridos entre duas datas ISO (b - a). */
+const diasEntre = (a: DataISO, b: DataISO) =>
+  Math.round((Date.parse(`${b}T12:00:00`) - Date.parse(`${a}T12:00:00`)) / 86_400_000)
+
+/** "Hoje, sexta-feira" · "Amanhã, sábado" · "Em 3 dias, segunda-feira" · "Quinta-feira, 03/12" */
+export function rotuloQuando(data: DataISO, hoje: DataISO): string {
+  const n = diasEntre(hoje, data)
+  const semana = DIAS_SEMANA[new Date(`${data}T12:00:00`).getDay()]!
+  if (n === 0) return `Hoje, ${semana}`
+  if (n === 1) return `Amanhã, ${semana}`
+  if (n > 1 && n < 7) return `Em ${n} dias, ${semana}`
+  return `${semana.charAt(0).toUpperCase()}${semana.slice(1)}, ${data.slice(8, 10)}/${data.slice(5, 7)}`
+}
+
 /** Agrupa por data (ordem crescente), separando próximas e anteriores. */
 export function agruparPorData(lista: MinhaInscricao[], hoje: DataISO) {
   const mapa = new Map<DataISO, MinhaInscricao[]>()

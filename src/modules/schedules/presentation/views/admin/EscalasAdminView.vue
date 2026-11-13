@@ -5,10 +5,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { hojeISO } from '@/shared/lib/datas'
-import { EmptyState } from '@/shared/ui'
+import { CarregandoConteudo, EmptyState } from '@/shared/ui'
 import { escalas } from '../../..'
 import { percentual, rotuloPeriodo, type Escala, type EscalaComResumo } from '../../../domain/Escala'
 import DuplicarEscalaDialog from '../../components/DuplicarEscalaDialog.vue'
@@ -79,9 +78,7 @@ function duplicar(e: Escala) {
       <AlertDescription>{{ erro }}</AlertDescription>
     </Alert>
 
-    <div v-if="carregando" class="flex justify-center py-12 text-primary">
-      <Spinner class="size-6" />
-    </div>
+    <CarregandoConteudo v-if="carregando" forma="cards" />
 
     <EmptyState
       v-else-if="!visiveis.length"
