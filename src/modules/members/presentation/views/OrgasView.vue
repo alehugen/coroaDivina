@@ -1,0 +1,217 @@
+<script setup lang="ts">
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useSessionStore } from '@/modules/identity'
+import { confirmar } from '@/shared/composables/useConfirm'
+import { toast } from '@/shared/composables/useToast'
+import { formatarData, hojeISO } from '@/shared/lib/datas'
+import {
+  AvatarIniciais,
+  BaseAlert,
+  BaseBadge,
+  BaseButton,
+  BaseCard,
+  BaseInput,
+  BaseSelect,
+  BaseSpinner,
+  EmptyState,
+} from '@/shared/ui'
+import { membros } from '../..'
+import {
+  fimSugerido,
+  situacao,
+  sobreposicoes,
+  type Mandato,
+  type SituacaoMandato,
+} from '../../domain/Mandato'
+import { useMembersStore } from '../stores/members'
+
+const store = useMembersStore()
+const session = useSessionStore()
+const hoje = hojeISO()
+
+onMounted(() => Promise.all([store.carregarMandatos(), store.socios.length ? null : store.carregarSocios()]))
+
+// --- formulário
+const form = reactive({ profileId: '', inicio: hoje, fim: fimSugerido(hoje) })
+const fimEditado = ref(false)
+const erroForm = ref('')
+const salvando = ref(false)
+
+watch(
+  () => form.inicio,
+  (inicio) => {
+    if (inicio && !fimEditado.value) form.fim = fimSugerido(inicio)
+  },
+)
+
+const opcoesSocios = computed(() => store.aprovados.map((s) => ({ value: s.id, label: s.nome })))
+const conflitos = computed(() =>
+  form.profileId && form.inicio && form.fim ? sobreposicoes(form, store.mandatos) : [],
+)
+
+async function criar() {
+  erroForm.value = ''
+  salvando.value = true
+  const r = await membros.criarMandato({ ...form }, store.mandatos)
+  salvando.value = false
+  if (!r.ok) {
+    erroForm.value = r.error
+    return
+  }
+  const nome = store.aprovados.find((s) => s.id === form.profileId)?.nome
+  toast(`Mandato de ${nome} cadastrado.`)
+  form.profileId = ''
+  fimEditado.value = false
+  await recarregar()
+}
+
+// --- lista
+const grupos = computed(() => {
+  const g: Record<SituacaoMandato, Mandato[]> = { vigente: [], futuro: [], encerrado: [] }
+  for (const m of store.mandatos) g[situacao(m, hoje)].push(m)
+  g.futuro.reverse() // próximos primeiro
+  return g
+})
+
+const SECOES: { chave: SituacaoMandato; titulo: string }[] = [
+  { chave: 'vigente', titulo: 'Em exercício' },
+  { chave: 'futuro', titulo: 'Próximos' },
+  { chave: 'encerrado', titulo: 'Anteriores' },
+]
+
+const ocupado = ref<string | null>(null)
+
+async function recarregar() {
+  await store.carregarMandatos()
+  // Se o admin alterou o próprio mandato, atualiza as permissões da sessão
+  await session.recarregar()
+}
+
+async function encerrar(m: Mandato) {
+  const ok = await confirmar({
+    titulo: `Encerrar o mandato de ${m.nome}?`,
+    mensagem: 'As permissões de Orgã deixam de valer a partir de hoje.',
+    confirmar: 'Encerrar',
+    tom: 'danger',
+  })
+  if (!ok) return
+  ocupado.value = m.id
+  const r = await membros.encerrarMandato(m)
+  ocupado.value = null
+  if (!r.ok) return toast(r.error, 'danger')
+  toast(`Mandato de ${m.nome} encerrado.`)
+  await recarregar()
+}
+
+async function remover(m: Mandato) {
+  const ok = await confirmar({
+    titulo: `Remover o mandato de ${m.nome}?`,
+    mensagem: `${formatarData(m.inicio)} a ${formatarData(m.fim)}. Essa ação não pode ser desfeita.`,
+    confirmar: 'Remover',
+    tom: 'danger',
+  })
+  if (!ok) return
+  ocupado.value = m.id
+  const r = await membros.removerMandato(m.id)
+  ocupado.value = null
+  if (!r.ok) return toast(r.error, 'danger')
+  toast('Mandato removido.')
+  await recarregar()
+}
+</script>
+
+<template>
+  <div class="grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
+    <BaseCard>
+      <h2 class="font-semibold text-text">Novo mandato de Orgã</h2>
+      <p class="mt-1 text-sm text-muted">
+        O cargo é rotativo. Durante o período, a pessoa pode criar e gerenciar escalas.
+      </p>
+
+      <form class="mt-5 flex flex-col gap-4" novalidate @submit.prevent="criar">
+        <BaseAlert v-if="erroForm" tone="danger">{{ erroForm }}</BaseAlert>
+        <BaseSelect
+          v-model="form.profileId"
+          label="Sócio"
+          placeholder="Selecione…"
+          :opcoes="opcoesSocios"
+          required
+        />
+        <div class="grid grid-cols-2 gap-3">
+          <BaseInput v-model="form.inicio" label="Início" type="date" required />
+          <BaseInput
+            v-model="form.fim"
+            label="Fim"
+            type="date"
+            required
+            @update:model-value="fimEditado = true"
+          />
+        </div>
+        <BaseAlert v-if="conflitos.length" tone="warning">
+          Período coincide com o mandato de
+          <strong>{{ conflitos.map((c) => c.nome).join(', ') }}</strong>. Ambos terão acesso de Orgã
+          nos dias em comum.
+        </BaseAlert>
+        <BaseButton type="submit" :loading="salvando" block>Cadastrar mandato</BaseButton>
+      </form>
+    </BaseCard>
+
+    <div class="flex flex-col gap-6">
+      <div v-if="store.carregandoMandatos && !store.mandatos.length" class="flex justify-center py-12 text-primary">
+        <BaseSpinner class="size-6" />
+      </div>
+
+      <EmptyState
+        v-else-if="!store.mandatos.length"
+        titulo="Nenhum mandato cadastrado"
+        descricao="Cadastre quem é a Orgã atual e as próximas, com as datas de início e fim."
+      />
+
+      <template v-else>
+        <section v-for="s in SECOES" v-show="grupos[s.chave].length" :key="s.chave">
+          <h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">{{ s.titulo }}</h2>
+          <ul class="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+            <li
+              v-for="m in grupos[s.chave]"
+              :key="m.id"
+              class="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:px-5"
+              :class="s.chave === 'encerrado' && 'opacity-70'"
+            >
+              <div class="flex flex-1 items-center gap-3">
+                <AvatarIniciais :nome="m.nome" />
+                <div>
+                  <p class="flex items-center gap-2 font-medium text-text">
+                    {{ m.nome }}
+                    <BaseBadge v-if="s.chave === 'vigente'" tone="accent">Orgã atual</BaseBadge>
+                  </p>
+                  <p class="text-sm text-muted">
+                    {{ formatarData(m.inicio) }} a {{ formatarData(m.fim) }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <BaseButton
+                  v-if="s.chave === 'vigente'"
+                  size="sm"
+                  variant="secondary"
+                  :loading="ocupado === m.id"
+                  @click="encerrar(m)"
+                >
+                  Encerrar agora
+                </BaseButton>
+                <BaseButton
+                  size="sm"
+                  variant="ghost"
+                  :disabled="ocupado === m.id"
+                  @click="remover(m)"
+                >
+                  Remover
+                </BaseButton>
+              </div>
+            </li>
+          </ul>
+        </section>
+      </template>
+    </div>
+  </div>
+</template>

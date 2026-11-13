@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useSessionStore } from '@/modules/identity'
-import { BaseSpinner } from '@/shared/ui'
+import { BaseSpinner, ConfirmHost, ToastHost } from '@/shared/ui'
 
 const session = useSessionStore()
 </script>
@@ -10,4 +10,6 @@ const session = useSessionStore()
     <BaseSpinner class="size-8" />
   </div>
   <RouterView v-else />
+  <ToastHost />
+  <ConfirmHost />
 </template>

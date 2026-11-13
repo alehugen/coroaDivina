@@ -1,3 +1,5 @@
+import { fail, ok, type Result } from './result'
+
 /**
  * Traduz erros do Supabase/Postgres (incluindo os códigos lançados pelas RPCs)
  * para mensagens amigáveis em português.
@@ -11,6 +13,7 @@ const MENSAGENS: Record<string, string> = {
   DATA_PASSADA: 'Não é possível alterar inscrições de dias que já passaram.',
   NAO_APROVADO: 'Seu cadastro ainda não foi aprovado.',
   SEM_PERMISSAO: 'Você não tem permissão para essa ação.',
+  ULTIMO_ADMIN: 'Não é possível: o app precisa ter pelo menos um admin ativo.',
   SOCIO_INVALIDO: 'Sócio inválido ou não aprovado.',
   // Auth
   'Invalid login credentials': 'E-mail ou senha incorretos.',
@@ -32,4 +35,13 @@ export function traduzErro(error: unknown): string {
   }
   if (/fetch|network/i.test(msg)) return 'Sem conexão. Verifique sua internet.'
   return 'Algo deu errado. Tente novamente.'
+}
+
+/** Executa uma operação de infraestrutura e converte exceções em Result com mensagem amigável. */
+export async function tentar<T>(fn: () => Promise<T>): Promise<Result<T>> {
+  try {
+    return ok(await fn())
+  } catch (e) {
+    return fail(traduzErro(e))
+  }
 }

@@ -60,8 +60,24 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'admin',
-        component: () => import('@/modules/members/presentation/views/AdminView.vue'),
+        component: () => import('@/modules/members/presentation/views/AdminLayout.vue'),
         meta: { gestor: true },
+        children: [
+          {
+            path: '',
+            redirect: () => (useSessionStore().admin ? '/admin/socios' : '/escalas'),
+          },
+          {
+            path: 'socios',
+            component: () => import('@/modules/members/presentation/views/SociosView.vue'),
+            meta: { admin: true },
+          },
+          {
+            path: 'orgas',
+            component: () => import('@/modules/members/presentation/views/OrgasView.vue'),
+            meta: { admin: true },
+          },
+        ],
       },
     ],
   },

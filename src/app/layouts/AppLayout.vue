@@ -10,7 +10,8 @@ const router = useRouter()
 const links = computed(() => [
   { to: '/escalas', label: 'Escalas', visivel: true },
   { to: '/minhas-escalas', label: 'Minhas escalas', visivel: true },
-  { to: '/admin', label: 'Administração', visivel: session.gestor },
+  // TODO(fase escalas): liberar para session.gestor quando a Orgã tiver abas próprias
+  { to: '/admin', label: 'Administração', visivel: session.admin },
 ])
 
 async function sair() {
