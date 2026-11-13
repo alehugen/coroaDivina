@@ -9,10 +9,10 @@ import { Spinner } from '@/components/ui/spinner'
 import { toast } from '@/shared/composables/useToast'
 import { FormInput, FormTextarea } from '@/shared/ui'
 import { escalas } from '../../..'
-import { useEscalaEditorStore } from '../../stores/escalaEditor'
+import { useEscalaAtualStore } from '../../stores/escalaAtual'
 
 const aberto = defineModel<boolean>({ required: true })
-const store = useEscalaEditorStore()
+const store = useEscalaAtualStore()
 
 const titulo = ref('')
 const descricao = ref('')

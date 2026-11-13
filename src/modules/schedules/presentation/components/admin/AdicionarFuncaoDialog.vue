@@ -10,12 +10,12 @@ import { MAX_VAGAS, useCatalogStore } from '@/modules/catalog'
 import { FormInput, FormSelect, VagasInput } from '@/shared/ui'
 import { escalas } from '../../..'
 import type { DiaEscala } from '../../../domain/Escala'
-import { useEscalaEditorStore } from '../../stores/escalaEditor'
+import { useEscalaAtualStore } from '../../stores/escalaAtual'
 
 const props = defineProps<{ dia: DiaEscala | null }>()
 const aberto = defineModel<boolean>({ required: true })
 const catalog = useCatalogStore()
-const store = useEscalaEditorStore()
+const store = useEscalaAtualStore()
 
 const OUTRA = '__outra__'
 const form = reactive({ modeloId: '', areaId: '', nome: '', vagasResp: 1, vagasAux: 2 })

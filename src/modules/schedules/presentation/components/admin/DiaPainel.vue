@@ -8,13 +8,13 @@ import { toast } from '@/shared/composables/useToast'
 import { FormTextarea } from '@/shared/ui'
 import { escalas } from '../../..'
 import { funcoesPorArea, ocupacao, rotuloDia, type DiaEscala } from '../../../domain/Escala'
-import { useEscalaEditorStore } from '../../stores/escalaEditor'
+import { useEscalaAtualStore } from '../../stores/escalaAtual'
 import AdicionarFuncaoDialog from './AdicionarFuncaoDialog.vue'
 import FuncaoDiaLinha from './FuncaoDiaLinha.vue'
 
 const props = defineProps<{ dia: DiaEscala; unicoDia: boolean }>()
 const emit = defineEmits<{ removido: [] }>()
-const store = useEscalaEditorStore()
+const store = useEscalaAtualStore()
 
 const grupos = computed(() => funcoesPorArea(props.dia.funcoes))
 const totais = computed(() =>

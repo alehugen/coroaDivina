@@ -1,16 +1,105 @@
 <script setup lang="ts">
-import { PhCalendarCheck } from '@phosphor-icons/vue'
+import { PhArrowRight, PhCalendarCheck, PhCaretDown, PhStar, PhWarningCircle } from '@phosphor-icons/vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
+import { hojeISO } from '@/shared/lib/datas'
 import { EmptyState } from '@/shared/ui'
+import { escalas } from '../..'
+import { rotuloDia } from '../../domain/Escala'
+import { agruparPorData, ROTULO_PAPEL, type MinhaInscricao } from '../../domain/Inscricao'
+
+const lista = ref<MinhaInscricao[]>([])
+const carregando = ref(true)
+const erro = ref('')
+const hoje = hojeISO()
+
+async function carregar() {
+  const r = await escalas.minhasInscricoes()
+  carregando.value = false
+  if (r.ok) lista.value = r.value
+  else erro.value = r.error
+}
+
+// Atualiza ao vivo (ex.: a Orgã incluiu/removeu você)
+let parar: (() => void) | undefined
+onMounted(() => {
+  carregar()
+  parar = escalas.observarInscricoes(carregar)
+})
+onUnmounted(() => parar?.())
+
+const grupos = computed(() => agruparPorData(lista.value, hoje))
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
     <h1 class="text-2xl font-bold">Minhas escalas</h1>
-    <!-- Próxima fase: inscrições futuras do sócio, com opção de cancelar -->
+
+    <Alert v-if="erro" variant="destructive">
+      <PhWarningCircle />
+      <AlertDescription>{{ erro }}</AlertDescription>
+    </Alert>
+
+    <div v-if="carregando" class="flex justify-center py-12 text-primary">
+      <Spinner class="size-6" />
+    </div>
+
     <EmptyState
+      v-else-if="!grupos.proximas.length"
       :icone="PhCalendarCheck"
-      titulo="Você ainda não está em nenhuma escala"
-      descricao="Escolha suas funções na aba Escalas."
-    />
+      titulo="Você não tem funções nos próximos dias"
+      descricao="Escolha suas funções em uma escala aberta."
+    >
+      <Button as-child>
+        <RouterLink to="/escalas">Ver escalas <PhArrowRight data-icon="inline-end" /></RouterLink>
+      </Button>
+    </EmptyState>
+
+    <ol v-else class="flex flex-col gap-4">
+      <li v-for="g in grupos.proximas" :key="g.data" class="overflow-hidden rounded-xl border bg-card">
+        <h2 class="flex items-center justify-between gap-2 border-b bg-muted/50 px-4 py-2.5 font-semibold sm:px-5">
+          {{ rotuloDia(g.data) }}
+          <Badge v-if="g.data === hoje" class="bg-highlight text-highlight-foreground">Hoje</Badge>
+        </h2>
+        <ul class="divide-y">
+          <li v-for="i in g.itens" :key="i.id">
+            <RouterLink
+              :to="`/escalas/${i.escalaId}`"
+              class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 sm:px-5"
+            >
+              <span class="size-2.5 shrink-0 rounded-full" :style="{ backgroundColor: i.areaCor }" aria-hidden="true" />
+              <span class="min-w-0 flex-1">
+                <span class="block font-medium">{{ i.funcao }}</span>
+                <span class="block truncate text-xs text-muted-foreground">{{ i.area }} · {{ i.escala }}</span>
+              </span>
+              <Badge :class="i.papel === 'responsavel' ? 'bg-accent text-accent-foreground' : ''" :variant="i.papel === 'responsavel' ? 'default' : 'secondary'">
+                <PhStar v-if="i.papel === 'responsavel'" weight="fill" data-icon="inline-start" />
+                {{ ROTULO_PAPEL[i.papel] }}
+              </Badge>
+              <PhArrowRight class="size-4 text-muted-foreground" />
+            </RouterLink>
+          </li>
+        </ul>
+      </li>
+    </ol>
+
+    <details v-if="grupos.anteriores.length" class="group">
+      <summary class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-muted-foreground">
+        <PhCaretDown class="size-4 transition-transform group-open:rotate-180" />
+        Anteriores ({{ grupos.anteriores.reduce((n, g) => n + g.itens.length, 0) }})
+      </summary>
+      <ul class="mt-3 divide-y overflow-hidden rounded-xl border bg-card opacity-80">
+        <template v-for="g in grupos.anteriores" :key="g.data">
+          <li v-for="i in g.itens" :key="i.id" class="flex items-center gap-3 px-4 py-2.5 text-sm sm:px-5">
+            <span class="w-28 shrink-0 text-muted-foreground">{{ rotuloDia(g.data).split(' | ')[1] }}</span>
+            <span class="min-w-0 flex-1 truncate">{{ i.funcao }}</span>
+            <span class="text-xs text-muted-foreground">{{ ROTULO_PAPEL[i.papel] }}</span>
+          </li>
+        </template>
+      </ul>
+    </details>
   </div>
 </template>

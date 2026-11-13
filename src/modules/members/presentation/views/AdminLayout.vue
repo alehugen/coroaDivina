@@ -25,7 +25,7 @@ onMounted(() => {
   <div class="flex flex-col gap-6">
     <div>
       <h1 class="text-2xl font-bold">Administração</h1>
-      <nav class="mt-4 flex gap-1 overflow-x-auto border-b" aria-label="Administração">
+      <nav class="mt-4 flex gap-1 overflow-x-auto border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Administração">
         <RouterLink
           v-for="a in abas"
           :key="a.to"

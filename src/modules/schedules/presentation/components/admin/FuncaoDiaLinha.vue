@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { PhStar, PhTrash } from '@phosphor-icons/vue'
-import { computed } from 'vue'
+import { PhStar, PhTrash, PhUserPlus, PhX } from '@phosphor-icons/vue'
+import { computed, ref } from 'vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -9,11 +9,12 @@ import { MAX_VAGAS } from '@/modules/catalog'
 import { confirmar } from '@/shared/composables/useConfirm'
 import { VagasInput } from '@/shared/ui'
 import { escalas } from '../../..'
-import { ocupacao, type FuncaoDoDia } from '../../../domain/Escala'
-import { useEscalaEditorStore } from '../../stores/escalaEditor'
+import { ocupacao, type FuncaoDoDia, type Inscricao } from '../../../domain/Escala'
+import { useEscalaAtualStore } from '../../stores/escalaAtual'
+import AdicionarPessoaDialog from './AdicionarPessoaDialog.vue'
 
 const props = defineProps<{ funcao: FuncaoDoDia }>()
-const store = useEscalaEditorStore()
+const store = useEscalaAtualStore()
 
 const oc = computed(() => ocupacao(props.funcao))
 const responsaveis = computed(() => props.funcao.inscricoes.filter((i) => i.papel === 'responsavel'))
@@ -47,6 +48,18 @@ async function remover() {
 function atualizarVagas(campo: 'vagasResp' | 'vagasAux', valor: number) {
   if (Number.isFinite(valor) && valor !== props.funcao[campo]) store.atualizarFuncao(props.funcao.id, { [campo]: valor })
 }
+
+const modalPessoa = ref(false)
+
+async function removerPessoa(i: Inscricao) {
+  const ok = await confirmar({
+    titulo: `Remover ${i.nome} de ${props.funcao.nome}?`,
+    mensagem: 'A vaga fica livre para outra pessoa.',
+    confirmar: 'Remover',
+    tom: 'danger',
+  })
+  if (ok) await store.executar(() => escalas.cancelarInscricao(i.id), `${i.nome} removido(a) da função.`)
+}
 </script>
 
 <template>
@@ -63,13 +76,38 @@ function atualizarVagas(campo: 'vagasResp' | 'vagasAux', valor: number) {
           {{ funcao.nome }}
           <span class="ml-1 text-sm font-normal text-muted-foreground tabular-nums">{{ oc.total }}/{{ oc.vagas }}</span>
         </p>
-        <div v-if="funcao.inscricoes.length" class="mt-1.5 flex flex-wrap gap-1">
-          <Badge v-for="i in responsaveis" :key="i.id" class="bg-accent text-accent-foreground" title="Responsável">
-            <PhStar weight="fill" data-icon="inline-start" /> {{ i.nome }}
+        <div class="mt-1.5 flex flex-wrap items-center gap-1">
+          <Badge
+            v-for="i in [...responsaveis, ...auxiliares]"
+            :key="i.id"
+            :variant="i.papel === 'responsavel' ? 'default' : 'secondary'"
+            :class="['pr-0.5', i.papel === 'responsavel' && 'bg-accent text-accent-foreground']"
+            :title="i.papel === 'responsavel' ? 'Responsável' : 'Auxiliar'"
+          >
+            <PhStar v-if="i.papel === 'responsavel'" weight="fill" data-icon="inline-start" />
+            {{ i.nome }}
+            <button
+              type="button"
+              class="ml-0.5 rounded-full p-0.5 hover:bg-foreground/10"
+              :aria-label="`Remover ${i.nome}`"
+              @click="removerPessoa(i)"
+            >
+              <PhX class="size-3" />
+            </button>
           </Badge>
-          <Badge v-for="i in auxiliares" :key="i.id" variant="secondary">{{ i.nome }}</Badge>
+          <Button
+            v-if="funcao.ativa && oc.total < oc.vagas"
+            variant="ghost"
+            size="xs"
+            class="text-primary"
+            @click="modalPessoa = true"
+          >
+            <PhUserPlus /> Incluir pessoa
+          </Button>
+          <span v-else-if="!funcao.inscricoes.length && funcao.ativa" class="text-xs text-muted-foreground">
+            Sem vagas
+          </span>
         </div>
-        <p v-else-if="funcao.ativa" class="mt-0.5 text-xs text-muted-foreground">Ninguém inscrito ainda</p>
       </div>
     </div>
 
@@ -105,5 +143,6 @@ function atualizarVagas(campo: 'vagasResp' | 'vagasAux', valor: number) {
         <TooltipContent>Remover deste dia</TooltipContent>
       </Tooltip>
     </div>
+    <AdicionarPessoaDialog v-model="modalPessoa" :funcao="funcao" />
   </li>
 </template>

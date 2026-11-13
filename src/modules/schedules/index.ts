@@ -5,3 +5,4 @@ import { supabaseEscalasRepository } from './infrastructure/SupabaseEscalasRepos
 export const escalas = criarUseCasesEscalas(supabaseEscalasRepository)
 
 export * from './domain/Escala'
+export * from './domain/Inscricao'

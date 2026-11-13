@@ -5,12 +5,13 @@ import {
   PhCopy,
   PhCrown,
   PhDotsThreeVertical,
+  PhEye,
   PhPencilSimple,
   PhPlus,
   PhTrash,
   PhWarningCircle,
 } from '@phosphor-icons/vue'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -26,25 +27,18 @@ import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
 import { EmptyState } from '@/shared/ui'
 import { escalas } from '../../..'
-import {
-  ocupacao,
-  rotuloDiaCurto,
-  rotuloPeriodo,
-  STATUS_INFO,
-  TRANSICOES,
-  type DiaEscala,
-  type Transicao,
-} from '../../../domain/Escala'
+import { rotuloPeriodo, STATUS_INFO, TRANSICOES, type Transicao } from '../../../domain/Escala'
+import DiasTabs from '../../components/DiasTabs.vue'
 import AdicionarDiaDialog from '../../components/admin/AdicionarDiaDialog.vue'
 import DiaPainel from '../../components/admin/DiaPainel.vue'
 import EditarEscalaDialog from '../../components/admin/EditarEscalaDialog.vue'
 import DuplicarEscalaDialog from '../../components/DuplicarEscalaDialog.vue'
 import StatusBadge from '../../components/StatusBadge.vue'
-import { useEscalaEditorStore } from '../../stores/escalaEditor'
+import { useEscalaAtualStore } from '../../stores/escalaAtual'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
-const store = useEscalaEditorStore()
+const store = useEscalaAtualStore()
 
 watch(
   () => props.id,
@@ -52,17 +46,17 @@ watch(
   { immediate: true },
 )
 
+onMounted(store.observar)
+onUnmounted(store.pararDeObservar)
+
 // --- dia selecionado
 const diaId = ref<string | null>(null)
 const dias = computed(() => store.escala?.dias ?? [])
 const dia = computed(() => dias.value.find((d) => d.id === diaId.value) ?? dias.value[0] ?? null)
-
-function preenchimentoDia(d: DiaEscala) {
-  const ativas = d.funcoes.filter((f) => f.ativa).map(ocupacao)
-  const vagas = ativas.reduce((n, o) => n + o.vagas, 0)
-  const ocupadas = ativas.reduce((n, o) => n + o.total, 0)
-  return { vagas, ocupadas, completo: vagas > 0 && ocupadas >= vagas }
-}
+const diaSelecionado = computed({
+  get: () => dia.value?.id ?? null,
+  set: (v) => (diaId.value = v),
+})
 
 function selecionarPorData(data: string) {
   diaId.value = dias.value.find((d) => d.data === data)?.id ?? null
@@ -160,6 +154,9 @@ const modalDia = ref(false)
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem @select="router.push(`/escalas/${store.escala.id}`)">
+                <PhEye /> Ver como sócio
+              </DropdownMenuItem>
               <DropdownMenuItem @select="modalEditar = true"><PhPencilSimple /> Editar título e descrição</DropdownMenuItem>
               <DropdownMenuItem @select="modalDuplicar = true"><PhCopy /> Duplicar</DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -185,28 +182,11 @@ const modalDia = ref(false)
       </header>
 
       <!-- Dias -->
-      <nav class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" aria-label="Dias da escala">
-        <button
-          v-for="d in dias"
-          :key="d.id"
-          type="button"
-          class="flex shrink-0 flex-col items-start rounded-lg border px-3 py-2 text-left transition-colors"
-          :class="dia?.id === d.id ? 'border-primary bg-accent' : 'bg-card hover:border-primary/40'"
-          :aria-current="dia?.id === d.id ? 'page' : undefined"
-          @click="diaId = d.id"
-        >
-          <span class="text-sm font-semibold">{{ rotuloDiaCurto(d.data) }}</span>
-          <span
-            class="text-xs tabular-nums"
-            :class="preenchimentoDia(d).completo ? 'font-medium text-success' : 'text-muted-foreground'"
-          >
-            {{ preenchimentoDia(d).ocupadas }}/{{ preenchimentoDia(d).vagas }}
-          </span>
-        </button>
+      <DiasTabs v-model="diaSelecionado" :dias="dias">
         <Button variant="outline" class="h-auto shrink-0 border-dashed px-4 text-muted-foreground" @click="modalDia = true">
           <PhPlus /> Dia
         </Button>
-      </nav>
+      </DiasTabs>
 
       <DiaPainel v-if="dia" :key="dia.id" :dia="dia" :unico-dia="dias.length === 1" @removido="diaId = null" />
 

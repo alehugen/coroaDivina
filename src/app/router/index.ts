@@ -55,6 +55,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/modules/schedules/presentation/views/EscalasView.vue'),
       },
       {
+        path: 'escalas/:id',
+        component: () => import('@/modules/schedules/presentation/views/EscalaView.vue'),
+        props: true,
+      },
+      {
         path: 'minhas-escalas',
         component: () => import('@/modules/schedules/presentation/views/MinhasEscalasView.vue'),
       },

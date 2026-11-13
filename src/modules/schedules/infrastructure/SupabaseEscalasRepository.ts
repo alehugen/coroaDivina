@@ -9,6 +9,7 @@ import type {
   Papel,
   StatusEscala,
 } from '../domain/Escala'
+import type { MinhaInscricao } from '../domain/Inscricao'
 
 interface EscalaRow {
   id: string
@@ -203,4 +204,58 @@ export const supabaseEscalasRepository: EscalasRepository = {
     return exigir(supabase.from('dia_funcoes').update(row).eq('id', id).select('id'))
   },
   removerFuncao: (id) => exigir(supabase.from('dia_funcoes').delete().eq('id', id).select('id')),
+
+  async inscrever(diaFuncaoId, papel, profileId) {
+    const { error } = await supabase.rpc('inscrever', {
+      p_dia_funcao_id: diaFuncaoId,
+      p_papel: papel,
+      ...(profileId ? { p_profile_id: profileId } : {}),
+    })
+    if (error) throw error
+  },
+
+  async cancelarInscricao(inscricaoId) {
+    const { error } = await supabase.rpc('cancelar_inscricao', { p_inscricao_id: inscricaoId })
+    if (error) throw error
+  },
+
+  async minhasInscricoes() {
+    const { data, error } = await supabase.rpc('minhas_inscricoes')
+    if (error) throw error
+    return ((data ?? []) as MinhaInscricaoRow[]).map(
+      (r): MinhaInscricao => ({
+        id: r.id,
+        papel: r.papel,
+        funcao: r.funcao,
+        area: r.area,
+        areaCor: r.area_cor,
+        data: r.data,
+        escalaId: r.escala_id,
+        escala: r.escala,
+        escalaStatus: r.escala_status,
+      }),
+    )
+  },
+
+  observarInscricoes(aoMudar) {
+    const canal = supabase
+      .channel(`inscricoes-${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inscricoes' }, () => aoMudar())
+      .subscribe()
+    return () => {
+      supabase.removeChannel(canal)
+    }
+  },
+}
+
+interface MinhaInscricaoRow {
+  id: string
+  papel: Papel
+  funcao: string
+  area: string
+  area_cor: string
+  data: string
+  escala_id: string
+  escala: string
+  escala_status: StatusEscala
 }

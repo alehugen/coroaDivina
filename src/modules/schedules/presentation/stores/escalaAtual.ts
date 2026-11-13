@@ -9,8 +9,8 @@ import { supabaseEscalasRepository } from '../../infrastructure/SupabaseEscalasR
 
 const escalas = criarUseCasesEscalas(supabaseEscalasRepository)
 
-/** Estado da escala aberta no editor (admin/Orgã). */
-export const useEscalaEditorStore = defineStore('escalaEditor', () => {
+/** Escala aberta na tela (grade do sócio ou editor do admin/Orgã), com atualização ao vivo. */
+export const useEscalaAtualStore = defineStore('escalaAtual', () => {
   const escala = ref<EscalaDetalhada | null>(null)
   const mandatos = ref<MandatoRef[]>([])
   const carregando = ref(false)
@@ -42,6 +42,24 @@ export const useEscalaEditorStore = defineStore('escalaEditor', () => {
 
   const recarregar = () => (escala.value ? carregar(escala.value.id) : Promise.resolve())
 
+  // --- Realtime: recarrega (com debounce) quando qualquer inscrição muda
+  let pararObservacao: (() => void) | null = null
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  function observar() {
+    pararObservacao?.()
+    pararObservacao = escalas.observarInscricoes(() => {
+      clearTimeout(timer)
+      timer = setTimeout(recarregar, 400)
+    })
+  }
+
+  function pararDeObservar() {
+    clearTimeout(timer)
+    pararObservacao?.()
+    pararObservacao = null
+  }
+
   /** Executa uma ação; em caso de erro mostra toast. Sempre recarrega a escala. */
   async function executar<T>(acao: () => Promise<Result<T>>, sucesso?: string): Promise<boolean> {
     const r = await acao()
@@ -72,6 +90,8 @@ export const useEscalaEditorStore = defineStore('escalaEditor', () => {
     totalInscricoes,
     carregar,
     recarregar,
+    observar,
+    pararDeObservar,
     executar,
     atualizarFuncao,
   }

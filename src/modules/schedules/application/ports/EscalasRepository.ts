@@ -5,8 +5,10 @@ import type {
   FuncaoDoDia,
   NovaEscala,
   NovaFuncaoDia,
+  Papel,
   StatusEscala,
 } from '../../domain/Escala'
+import type { MinhaInscricao } from '../../domain/Inscricao'
 
 export type PatchFuncaoDia = Partial<Pick<FuncaoDoDia, 'vagasResp' | 'vagasAux' | 'ativa' | 'nome'>>
 
@@ -34,4 +36,11 @@ export interface EscalasRepository {
   adicionarFuncao(diaId: string, dados: NovaFuncaoDia & { ordem: number }): Promise<void>
   atualizarFuncao(id: string, patch: PatchFuncaoDia): Promise<void>
   removerFuncao(id: string): Promise<void>
+
+  /** profileId omitido = o próprio usuário. Outro id exige admin/Orgã. */
+  inscrever(diaFuncaoId: string, papel: Papel, profileId?: string): Promise<void>
+  cancelarInscricao(inscricaoId: string): Promise<void>
+  minhasInscricoes(): Promise<MinhaInscricao[]>
+  /** Avisa sempre que alguma inscrição mudar (Realtime). Retorna função para parar. */
+  observarInscricoes(aoMudar: () => void): () => void
 }

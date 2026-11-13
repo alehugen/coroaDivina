@@ -7,6 +7,7 @@ import {
   type DiaEscala,
   type NovaEscala,
   type NovaFuncaoDia,
+  type Papel,
   type StatusEscala,
 } from '../domain/Escala'
 import type { EscalasRepository, PatchFuncaoDia } from './ports/EscalasRepository'
@@ -60,5 +61,11 @@ export function criarUseCasesEscalas(repo: EscalasRepository) {
 
     atualizarFuncao: (id: string, patch: PatchFuncaoDia) => tentar(() => repo.atualizarFuncao(id, patch)),
     removerFuncao: (id: string) => tentar(() => repo.removerFuncao(id)),
+
+    inscrever: (diaFuncaoId: string, papel: Papel, profileId?: string) =>
+      tentar(() => repo.inscrever(diaFuncaoId, papel, profileId)),
+    cancelarInscricao: (inscricaoId: string) => tentar(() => repo.cancelarInscricao(inscricaoId)),
+    minhasInscricoes: () => tentar(() => repo.minhasInscricoes()),
+    observarInscricoes: (aoMudar: () => void) => repo.observarInscricoes(aoMudar),
   }
 }

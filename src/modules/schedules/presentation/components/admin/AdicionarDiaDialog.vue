@@ -16,11 +16,11 @@ import { Spinner } from '@/components/ui/spinner'
 import { somarDias } from '@/shared/lib/datas'
 import { FormInput } from '@/shared/ui'
 import { escalas } from '../../..'
-import { useEscalaEditorStore } from '../../stores/escalaEditor'
+import { useEscalaAtualStore } from '../../stores/escalaAtual'
 
 const aberto = defineModel<boolean>({ required: true })
 const emit = defineEmits<{ adicionado: [data: string] }>()
-const store = useEscalaEditorStore()
+const store = useEscalaAtualStore()
 
 const data = ref('')
 const erro = ref('')
