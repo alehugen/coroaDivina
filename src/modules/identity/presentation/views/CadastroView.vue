@@ -42,7 +42,7 @@ async function cadastrar() {
     return
   }
   await session.recarregar()
-  router.replace('/aguardando-aprovacao')
+  router.replace('/escalas')
 }
 </script>
 
@@ -50,7 +50,7 @@ async function cadastrar() {
   <AuthLayout
     v-if="!confirmarEmail"
     titulo="Cadastro de sócio"
-    subtitulo="Após o cadastro, um administrador irá aprovar seu acesso."
+    subtitulo="Preencha seus dados para ver as escalas e escolher suas funções."
   >
     <form novalidate @submit.prevent="cadastrar">
       <FieldGroup>
@@ -116,10 +116,7 @@ async function cadastrar() {
       <p>
         Enviamos um link de confirmação para <strong>{{ form.email.trim() }}</strong>.
       </p>
-      <p class="text-sm text-muted-foreground">
-        Depois de confirmar, seu cadastro ficará aguardando a aprovação de um administrador. Você
-        receberá um e-mail quando for aprovado.
-      </p>
+      <p class="text-sm text-muted-foreground">Depois de confirmar, é só entrar com seu e-mail e senha.</p>
       <RouterLink to="/entrar" class="font-semibold text-primary hover:underline">Ir para o login</RouterLink>
     </div>
   </AuthLayout>

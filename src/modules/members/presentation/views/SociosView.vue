@@ -34,9 +34,12 @@ onMounted(async () => {
 
 watch(grupo, () => (busca.value = ''))
 
+// Cadastro não exige mais aprovação: "Pendentes" só aparece se sobrou alguém de antes.
 const opcoes = computed(() => [
-  { value: 'pendente' as const, label: 'Pendentes', contador: store.contagem.pendente },
-  { value: 'aprovado' as const, label: 'Aprovados', contador: store.contagem.aprovado },
+  ...(store.contagem.pendente
+    ? [{ value: 'pendente' as const, label: 'Pendentes', contador: store.contagem.pendente }]
+    : []),
+  { value: 'aprovado' as const, label: 'Ativos', contador: store.contagem.aprovado },
   { value: 'inativo' as const, label: 'Inativos', contador: store.contagem.inativo },
 ])
 
@@ -100,7 +103,7 @@ async function executar(acao: keyof AcoesSocio, s: Socio) {
 
 const TITULOS_VAZIO: Record<GrupoStatus, string> = {
   pendente: 'Nenhum cadastro aguardando aprovação',
-  aprovado: 'Nenhum sócio aprovado',
+  aprovado: 'Nenhum sócio cadastrado',
   inativo: 'Nenhum sócio inativo',
 }
 </script>

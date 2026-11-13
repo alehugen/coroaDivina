@@ -10,7 +10,7 @@ e painel de administração.
 
 | Perfil | Como obtém | Pode |
 |---|---|---|
-| **Sócio** | Cadastro + aprovação de um admin | Ver escalas abertas, se inscrever em vagas livres, ver a equipe, cancelar |
+| **Sócio** | Cadastro (entra na hora) | Ver escalas abertas, se inscrever em vagas livres, ver a equipe, cancelar |
 | **Orgã** | Mandato (início/fim) cadastrado pelo admin | Tudo do sócio + gerenciar escalas enquanto o mandato estiver vigente |
 | **Admin** | Definido por outro admin | Tudo + aprovar sócios, permissões e mandatos de Orgã |
 
@@ -58,7 +58,9 @@ npm run build                # typecheck + build
    ```
 3. **Authentication → URL Configuration**: `Site URL` = URL da Vercel; adicione
    `http://localhost:5173/**` e `https://<seu-app>.vercel.app/**` em *Redirect URLs*.
-4. **Authentication → Providers → Email**: mantenha *Confirm email* ligado.
+4. **Authentication → Providers → Email**: **desligue** *Confirm email*. O cadastro não exige
+   confirmação de e-mail nem aprovação (público mais idoso, app interno): a pessoa se cadastra e já entra.
+   O admin pode desativar contas indevidas em *Administração → Sócios*.
 5. Primeiro admin: cadastre-se pelo app e rode no SQL Editor:
    ```sql
    update profiles set role = 'admin', status = 'aprovado' where email = 'seu@email.com';
