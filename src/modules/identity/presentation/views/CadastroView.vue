@@ -6,7 +6,7 @@ import { BaseAlert, BaseButton, BaseInput } from '@/shared/ui'
 import { identidade } from '../..'
 import type { ErrosCadastroUI } from '../../application/use-cases'
 import { SENHA_MIN, type DadosCadastro } from '../../domain/Cadastro'
-import { formatarTelefone } from '../../domain/Telefone'
+import { mascararTelefone } from '../../domain/Telefone'
 import { useSessionStore } from '../stores/session'
 
 const router = useRouter()
@@ -22,11 +22,6 @@ const form = reactive<DadosCadastro>({
 const erros = ref<ErrosCadastroUI>({})
 const carregando = ref(false)
 const confirmarEmail = ref(false)
-
-function mascararTelefone() {
-  const d = form.telefone.replace(/\D/g, '').slice(0, 11)
-  form.telefone = d.length >= 10 ? formatarTelefone(d) : d
-}
 
 async function cadastrar() {
   erros.value = {}
@@ -68,10 +63,11 @@ async function cadastrar() {
         label="Telefone (WhatsApp)"
         type="tel"
         autocomplete="tel"
-        placeholder="(61) 99999-0000"
+        inputmode="numeric"
+        placeholder="(41) 99999-0000"
+        :mascara="mascararTelefone"
         :error="erros.telefone"
         required
-        @blur="mascararTelefone"
       />
       <BaseInput
         v-model="form.senha"

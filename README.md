@@ -4,7 +4,7 @@ App de escalas de trabalho do Núcleo Coroa Divina (UDV): cadastro de sócios co
 escalas por dia/área/função com vagas de **Responsável** e **Auxiliar**, inscrição em tempo real
 e painel de administração.
 
-**Stack:** Vue 3 · TypeScript · Pinia · Vue Router · Tailwind 4 · Supabase · Vercel · Resend
+**Stack:** Vue 3 · TypeScript · Pinia · Vue Router · Tailwind 4 · Supabase · Vercel · Gmail (SMTP)
 
 ## Perfis
 
@@ -63,26 +63,41 @@ npm run build                # typecheck + build
    update profiles set role = 'admin', status = 'aprovado' where email = 'seu@email.com';
    ```
 
-### 2. Resend (e-mails)
+### 2. E-mails via Gmail (SMTP)
 
-1. Crie conta em https://resend.com e **verifique um domínio** (sem domínio, o Resend só envia
-   para o e-mail do dono da conta).
+Uma conta Gmail dedicada ao app envia tanto os e-mails do Auth quanto os do app
+(limite ~500/dia). Para trocar por domínio próprio no futuro (Resend etc.), basta mudar
+host/usuário/senha nos dois lugares abaixo.
+
+1. Na conta Gmail: ative a **verificação em 2 etapas** e gere uma **senha de app**
+   em https://myaccount.google.com/apppasswords.
 2. **SMTP do Supabase Auth** (confirmação de cadastro e recuperação de senha) —
    *Authentication → Emails → SMTP Settings*:
-   - Host `smtp.resend.com` · Port `465` · User `resend` · Password = API key do Resend
-   - Sender: `escalas@seudominio.com`
+   - Host `smtp.gmail.com` · Port `465` · Username = Gmail · Password = senha de app
+   - Sender email = Gmail · Sender name `Escalas Coroa Divina`
 3. **E-mails do app** (novo cadastro → admins, aprovação → sócio, cancelamento → Orgã):
    ```bash
-   npx supabase secrets set RESEND_API_KEY=re_xxx \
-     EMAIL_FROM="Escalas Coroa Divina <escalas@seudominio.com>" \
-     APP_URL=https://<seu-app>.vercel.app \
-     WEBHOOK_SECRET=<uma-string-aleatoria>
+   npx supabase secrets set SMTP_USER=<gmail> SMTP_PASS=<senha-de-app> \
+     APP_URL=https://<seu-app>.vercel.app WEBHOOK_SECRET=<uma-string-aleatoria>
    npx supabase functions deploy enviar-notificacao --no-verify-jwt
    ```
+   (Edge Functions bloqueiam as portas 25/587; a função usa 465.)
 4. *Database → Webhooks → Create*: tabela `notificacoes`, evento **Insert**, tipo
    *Supabase Edge Function* → `enviar-notificacao`, header `x-webhook-secret: <mesma string>`.
 
-### 3. Vercel
+### 3. Templates de e-mail do Auth (português)
+
+Em *Authentication → Emails → Templates*, cole o HTML de `supabase/templates/` e ajuste o assunto:
+
+| Template no Supabase | Arquivo | Assunto |
+|---|---|---|
+| Confirm signup | `confirmar-cadastro.html` | Confirme seu cadastro – Escalas Coroa Divina |
+| Reset password | `recuperar-senha.html` | Redefinir senha – Escalas Coroa Divina |
+| Change email address | `alterar-email.html` | Confirme seu novo e-mail – Escalas Coroa Divina |
+
+O Supabase só libera a edição dos templates depois que o SMTP próprio (passo 2) estiver ativo.
+
+### 4. Vercel
 
 1. Importe o repositório (framework: Vite).
 2. Variáveis de ambiente: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `CRON_SECRET`.

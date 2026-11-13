@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { validarCadastro } from './Cadastro'
 import { isAdmin, isGestor, type Conta } from './Conta'
 import { criarEmail } from './Email'
-import { criarTelefone, formatarTelefone } from './Telefone'
+import { criarTelefone, formatarTelefone, mascararTelefone } from './Telefone'
 
 describe('Email', () => {
   it('normaliza e valida', () => {
@@ -23,6 +23,25 @@ describe('Telefone', () => {
   })
   it('formata', () => {
     expect(formatarTelefone('11987654321')).toBe('(11) 98765-4321')
+  })
+  it('aplica máscara progressiva enquanto digita', () => {
+    const passos = ['4', '41', '419', '4198', '41988177', '419881770', '4198817709', '41988177093']
+    expect(passos.map(mascararTelefone)).toEqual([
+      '(4',
+      '(41',
+      '(41) 9',
+      '(41) 98',
+      '(41) 9881-77',
+      '(41) 9881-770',
+      '(41) 9881-7709',
+      '(41) 98817-7093',
+    ])
+  })
+  it('máscara aceita colar com DDI e limita a 11 dígitos', () => {
+    expect(mascararTelefone('+55 41 98817-7093')).toBe('(41) 98817-7093')
+    expect(mascararTelefone('419881770939999')).toBe('(41) 98817-7093')
+    expect(mascararTelefone('(41')).toBe('(41')
+    expect(mascararTelefone('')).toBe('')
   })
 })
 

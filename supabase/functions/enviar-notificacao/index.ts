@@ -1,13 +1,19 @@
 // Supabase Edge Function (Deno).
 // Disparada por um Database Webhook em INSERT na tabela public.notificacoes.
-// Envia o e-mail via Resend e marca a notificação como enviada.
+// Envia o e-mail por SMTP (Gmail) e marca a notificação como enviada.
 //
 // Secrets necessários (supabase secrets set ...):
-//   RESEND_API_KEY, EMAIL_FROM (ex.: "Escalas Coroa Divina <escalas@seudominio.com>"),
-//   APP_URL (ex.: https://escalas-coroa.vercel.app), WEBHOOK_SECRET
+//   SMTP_USER  — conta Gmail remetente
+//   SMTP_PASS  — senha de app do Gmail (16 letras)
+//   APP_URL    — ex.: https://escalas-coroa.vercel.app
+//   WEBHOOK_SECRET — mesmo valor configurado no header do Database Webhook
+// Opcionais: SMTP_HOST (padrão smtp.gmail.com), EMAIL_FROM_NAME (padrão "Escalas Coroa Divina")
 // SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY já são injetados pela plataforma.
+//
+// Importante: Edge Functions bloqueiam as portas 25 e 587 — por isso SMTP em 465 (SSL).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import nodemailer from 'npm:nodemailer@6'
 
 type Notificacao = {
   id: string
@@ -20,6 +26,15 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 )
 const APP_URL = Deno.env.get('APP_URL') ?? ''
+const SMTP_USER = Deno.env.get('SMTP_USER')!
+const FROM_NAME = Deno.env.get('EMAIL_FROM_NAME') ?? 'Escalas Coroa Divina'
+
+const smtp = nodemailer.createTransport({
+  host: Deno.env.get('SMTP_HOST') ?? 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: { user: SMTP_USER, pass: Deno.env.get('SMTP_PASS')! },
+})
 
 const esc = (s: unknown) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
@@ -118,15 +133,13 @@ Deno.serve(async (req) => {
     const { to, subject, html } = await montar(n)
     if (!to.length) throw new Error('sem destinatários')
 
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ from: Deno.env.get('EMAIL_FROM'), to, subject, html }),
+    // Vários destinatários (admins/Orgãs) vão em cópia oculta para não expor e-mails.
+    await smtp.sendMail({
+      from: { name: FROM_NAME, address: SMTP_USER },
+      ...(to.length === 1 ? { to } : { to: SMTP_USER, bcc: to }),
+      subject,
+      html,
     })
-    if (!r.ok) throw new Error(`Resend ${r.status}: ${await r.text()}`)
 
     await supabase.from('notificacoes').update({ enviada_em: new Date().toISOString() }).eq('id', n.id)
     return new Response('ok')
