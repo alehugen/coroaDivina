@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
   }
 
   const { profileId } = (await req.json().catch(() => ({}))) as { profileId?: string }
-  if (!profileId) return responder(400, { error: 'Informe o sócio.' })
+  if (!profileId || !/^[0-9a-f-]{36}$/i.test(profileId)) return responder(400, { error: 'Informe o sócio.' })
   if (profileId === user.id) return responder(400, { error: 'EXCLUIR_A_SI_MESMO' })
 
   const { data: alvo } = await servico.from('profiles').select('role').eq('id', profileId).single()

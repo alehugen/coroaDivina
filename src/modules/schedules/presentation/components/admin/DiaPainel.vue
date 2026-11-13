@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PhPlus, PhTrash } from '@phosphor-icons/vue'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { confirmar } from '@/shared/composables/useConfirm'
@@ -30,10 +30,12 @@ const totais = computed(() =>
 )
 
 // --- observações (salva ao sair do campo)
+// Observa só o TEXTO salvo (não o objeto do dia): recargas ao vivo, como alguém se
+// inscrevendo, não apagam o que a Orgã está digitando.
 const observacoes = ref(props.dia.observacoes)
 watch(
-  () => props.dia,
-  (d) => (observacoes.value = d.observacoes),
+  () => props.dia.observacoes,
+  (salvo) => (observacoes.value = salvo),
 )
 
 async function salvarObservacoes() {
@@ -43,6 +45,9 @@ async function salvarObservacoes() {
   toast('Observações salvas.')
   await store.recarregar()
 }
+
+// Trocar de dia/tela sem sair do campo também salva
+onBeforeUnmount(salvarObservacoes)
 
 async function removerDia() {
   const ok = await confirmar({

@@ -13,11 +13,15 @@ export const useSessionStore = defineStore('session', () => {
   const admin = computed(() => isAdmin(conta.value))
   const gestor = computed(() => isGestor(conta.value))
 
+  /**
+   * Recarrega a conta. `null` = sem sessão ou conta inexistente (ex.: excluída).
+   * Em falha de rede mantém o que já havia, para não "deslogar" por um soluço de conexão.
+   */
   async function recarregar() {
     try {
       conta.value = await repo.contaAtual()
     } catch {
-      conta.value = null
+      /* mantém a conta atual */
     }
   }
 

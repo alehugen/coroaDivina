@@ -64,7 +64,7 @@ const ACOES: Record<keyof AcoesSocio, { confirmacao?: (s: Socio) => ConfirmOpcoe
   desativar: {
     confirmacao: (s) => ({
       titulo: `Desativar ${s.nome}?`,
-      mensagem: 'A pessoa perderá o acesso ao app. As inscrições já feitas serão mantidas.',
+      mensagem: 'A pessoa perderá o acesso ao app e sairá das funções a partir de hoje, liberando as vagas. O histórico de escalas passadas é mantido.',
       confirmar: 'Desativar',
       tom: 'danger',
     }),

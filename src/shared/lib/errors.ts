@@ -23,6 +23,9 @@ const MENSAGENS: Record<string, string> = {
   'duplicate key value': 'Já existe um item com esse nome.',
   ULTIMO_ADMIN: 'Não é possível: o app precisa ter pelo menos um admin ativo.',
   SOCIO_INVALIDO: 'Sócio inválido ou não aprovado.',
+  DIA_NAO_MUDA_DE_ESCALA: 'Um dia não pode ser movido para outra escala.',
+  INSCRICAO_INEXISTENTE: 'Essa inscrição já tinha sido removida.',
+  FUNCAO_INEXISTENTE: 'Essa função não existe mais. Atualize a página.',
   EXCLUIR_A_SI_MESMO: 'Você não pode excluir a própria conta por aqui.',
   EXCLUIR_ADMIN: 'Remova o acesso de admin antes de excluir esta conta.',
   'Failed to send a request to the Edge Function':

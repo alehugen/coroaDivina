@@ -28,7 +28,7 @@ src/
     schedules/    escalas, dias, funções, inscrições
 supabase/
   migrations/     schema, RLS, RPCs (inscrever / cancelar_inscricao), catálogo inicial
-  functions/      enviar-notificacao (e-mails via Resend)
+  functions/      enviar-notificacao (e-mails via Gmail/SMTP), excluir-conta
 api/keepalive.ts  cron da Vercel para o Supabase gratuito não pausar
 ```
 
@@ -96,6 +96,12 @@ host/usuário/senha nos dois lugares abaixo.
    `lembretes-vespera` (todo dia 21:00 UTC = 18:00 de Brasília), que gera uma notificação por pessoa
    escalada no dia seguinte; o webhook acima envia o e-mail. Conferir em *Integrations → Cron*.
    Teste manual no SQL Editor: `select public.gerar_lembretes('2026-11-20');`
+7. **Outros jobs (pg_cron)**: `reenviar-notificacoes` (a cada 15 min, reenvia e-mails que falharam,
+   até 3 tentativas) e `limpar-notificacoes` (semanal, apaga registros com mais de 180 dias).
+   No webhook de `notificacoes`, use **timeout de 5000 ms** (o padrão de 1 s pode cortar o envio).
+   Para ver falhas: `select tipo, tentativas, erro, created_at from notificacoes where enviada_em is null;`
+
+> Datas de "hoje" no banco usam o fuso de Brasília (`public.hoje_br()`), não o UTC do servidor.
 
 ### App no celular (PWA)
 
@@ -109,7 +115,6 @@ Em *Authentication → Emails → Templates*, cole o HTML de `supabase/templates
 
 | Template no Supabase | Arquivo | Assunto |
 |---|---|---|
-| Confirm signup | `confirmar-cadastro.html` | Confirme seu cadastro – Escalas Coroa Divina |
 | Reset password | `recuperar-senha.html` | Redefinir senha – Escalas Coroa Divina |
 | Change email address | `alterar-email.html` | Confirme seu novo e-mail – Escalas Coroa Divina |
 

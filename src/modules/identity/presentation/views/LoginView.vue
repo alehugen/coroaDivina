@@ -31,6 +31,12 @@ async function entrar() {
   }
   await session.recarregar()
   carregando.value = false
+  // Login válido mas sem cadastro no app (ex.: conta excluída): não deixa preso no login
+  if (!session.logado) {
+    await session.sair()
+    erro.value = 'Não encontramos seu cadastro. Faça um novo cadastro ou fale com a administração.'
+    return
+  }
   const r2 = route.query.r
   router.replace(typeof r2 === 'string' && r2.startsWith('/') ? r2 : '/escalas')
 }

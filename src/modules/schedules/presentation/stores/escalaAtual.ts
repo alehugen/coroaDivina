@@ -43,11 +43,14 @@ export const useEscalaAtualStore = defineStore('escalaAtual', () => {
   const recarregar = () => (escala.value ? carregar(escala.value.id) : Promise.resolve())
 
   // --- Realtime: recarrega (com debounce) quando qualquer inscrição muda
+  // Contagem de telas interessadas: trocar de tela (editor ↔ grade) não derruba a assinatura da outra.
   let pararObservacao: (() => void) | null = null
+  let interessados = 0
   let timer: ReturnType<typeof setTimeout> | undefined
 
   function observar() {
-    pararObservacao?.()
+    interessados++
+    if (pararObservacao) return
     pararObservacao = escalas.observarInscricoes(() => {
       clearTimeout(timer)
       timer = setTimeout(recarregar, 400)
@@ -55,6 +58,8 @@ export const useEscalaAtualStore = defineStore('escalaAtual', () => {
   }
 
   function pararDeObservar() {
+    interessados = Math.max(0, interessados - 1)
+    if (interessados > 0) return
     clearTimeout(timer)
     pararObservacao?.()
     pararObservacao = null

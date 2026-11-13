@@ -24,11 +24,12 @@ const dados = reactive({ nome: '', telefone: '' })
 const erros = ref<ErrosPerfil & { geral?: string }>({})
 const salvandoDados = ref(false)
 
+// Observa só os valores salvos: recarregar a conta (ex.: após trocar a senha) não apaga edições em andamento
 watch(
-  () => session.conta,
-  (c) => {
-    dados.nome = c?.nome ?? ''
-    dados.telefone = c?.telefone ? formatarTelefone(c.telefone) : ''
+  () => [session.conta?.nome ?? '', session.conta?.telefone ?? ''] as const,
+  ([nome, telefone]) => {
+    dados.nome = nome
+    dados.telefone = telefone ? formatarTelefone(telefone) : ''
   },
   { immediate: true },
 )

@@ -19,7 +19,7 @@ type ItemLembrete = { funcao: string; papel: string; area: string; escala: strin
 
 type Notificacao = {
   id: string
-  tipo: 'novo_cadastro' | 'cadastro_aprovado' | 'cancelamento' | 'lembrete' | 'exclusao_solicitada'
+  tipo: 'cadastro_aprovado' | 'cancelamento' | 'lembrete' | 'exclusao_solicitada'
   // deno-lint-ignore no-explicit-any
   payload: Record<string, any>
 }
@@ -87,23 +87,13 @@ async function emailsOrgas(dataRef: string): Promise<string[]> {
 async function montar(n: Notificacao): Promise<{ to: string[]; subject: string; html: string }> {
   const p = n.payload
   switch (n.tipo) {
-    case 'novo_cadastro':
-      return {
-        to: await emailsAdmins(),
-        subject: `Novo cadastro aguardando aprovação: ${p.nome}`,
-        html: layout(
-          'Novo cadastro',
-          `<p><strong>${esc(p.nome)}</strong> (${esc(p.email)}) se cadastrou e aguarda aprovação.</p>
-           <p><a href="${APP_URL}/admin/socios">Abrir painel de sócios</a></p>`,
-        ),
-      }
     case 'cadastro_aprovado':
       return {
         to: [p.email],
-        subject: 'Seu cadastro foi aprovado',
+        subject: 'Seu acesso ao app de escalas está liberado',
         html: layout(
-          `Bem-vindo(a), ${esc(p.nome)}!`,
-          `<p>Seu cadastro no app de escalas foi aprovado. Você já pode escolher suas funções.</p>
+          `Olá, ${esc(p.nome)}!`,
+          `<p>Seu acesso ao app de escalas está liberado. Você já pode escolher suas funções.</p>
            <p><a href="${APP_URL}/escalas">Ver escalas abertas</a></p>`,
         ),
       }
@@ -139,7 +129,9 @@ async function montar(n: Notificacao): Promise<{ to: string[]; subject: string; 
           `Olá, ${esc(String(p.nome).split(' ')[0])}!`,
           `<p>Passando para lembrar que <strong>amanhã, ${diaDaSemana(p.data)} (${dataBR(p.data)})</strong>, você está escalado(a) em:</p>
            <ul style="padding-left:20px">${linhas}</ul>
-           <p><a href="${APP_URL}/escalas/${esc(itens[0]?.escala_id)}?dia=${esc(p.data)}"
+           <p><a href="${new Set(itens.map((i) => i.escala_id)).size === 1
+                 ? `${APP_URL}/escalas/${esc(itens[0]!.escala_id)}?dia=${esc(p.data)}`
+                 : `${APP_URL}/minhas-escalas`}"
                  style="display:inline-block;background:#007f5f;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">
                  Ver a escala</a></p>
            <p style="color:#5a6b5d;font-size:13px">Não vai conseguir? Entre no app e saia da função para liberar a vaga.
@@ -157,6 +149,8 @@ async function montar(n: Notificacao): Promise<{ to: string[]; subject: string; 
            <p>Aprove ou recuse em <a href="${APP_URL}/admin/socios">Administração → Sócios</a>.</p>`,
         ),
       }
+    default:
+      throw new Error(`tipo de notificação desconhecido: ${n.tipo}`)
   }
 }
 
@@ -165,8 +159,12 @@ Deno.serve(async (req) => {
     return new Response('unauthorized', { status: 401 })
   }
 
-  const body = await req.json()
-  const n = body.record as Notificacao
+  let n: Notificacao | undefined
+  try {
+    n = ((await req.json()) as { record?: Notificacao }).record
+  } catch {
+    return new Response('corpo inválido', { status: 400 })
+  }
   if (!n?.id) return new Response('sem registro', { status: 400 })
 
   try {
@@ -184,6 +182,7 @@ Deno.serve(async (req) => {
     await supabase.from('notificacoes').update({ enviada_em: new Date().toISOString() }).eq('id', n.id)
     return new Response('ok')
   } catch (e) {
+    // Fica pendente: o job "reenviar-notificacoes" tenta de novo (até 3x)
     await supabase.from('notificacoes').update({ erro: String(e) }).eq('id', n.id)
     return new Response(String(e), { status: 500 })
   }
