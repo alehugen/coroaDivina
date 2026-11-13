@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { validarCadastro } from './Cadastro'
+import { validarCadastro, validarPerfil } from './Cadastro'
 import { isAdmin, isGestor, type Conta } from './Conta'
 import { criarEmail } from './Email'
 import { criarTelefone, formatarTelefone, mascararTelefone } from './Telefone'
@@ -60,6 +60,19 @@ describe('validarCadastro', () => {
   it('acusa senhas diferentes', () => {
     const r = validarCadastro({ ...base, confirmacaoSenha: 'outra123' })
     expect(!r.ok && r.error.confirmacaoSenha).toBeTruthy()
+  })
+})
+
+describe('validarPerfil', () => {
+  it('normaliza nome e telefone', () => {
+    expect(validarPerfil({ nome: ' Ana  Maria ', telefone: '(41) 98817-7093' })).toEqual({
+      ok: true,
+      value: { nome: 'Ana Maria', telefone: '41988177093' },
+    })
+  })
+  it('aponta erros por campo', () => {
+    const r = validarPerfil({ nome: 'A', telefone: '123' })
+    expect(!r.ok && Object.keys(r.error).sort()).toEqual(['nome', 'telefone'])
   })
 })
 

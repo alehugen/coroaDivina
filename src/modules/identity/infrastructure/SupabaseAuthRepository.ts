@@ -66,6 +66,14 @@ export const supabaseAuthRepository: AuthRepository = {
     if (error) throw error
   },
 
+  async atualizarPerfil(id, { nome, telefone }) {
+    const { data, error } = await supabase.from('profiles').update({ nome, telefone }).eq('id', id).select('id')
+    if (error) throw error
+    if (!data?.length) throw new Error('SEM_PERMISSAO')
+    // Mantém o metadata do Auth coerente (nome aparece em e-mails/painel do Supabase)
+    await supabase.auth.updateUser({ data: { nome, telefone } })
+  },
+
   aoMudarSessao(cb) {
     const { data } = supabase.auth.onAuthStateChange((evento) => cb(evento))
     return () => data.subscription.unsubscribe()

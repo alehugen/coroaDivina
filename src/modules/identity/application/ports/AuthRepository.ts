@@ -9,6 +9,7 @@ export interface AuthRepository {
   contaAtual(): Promise<Conta | null>
   solicitarRedefinicaoSenha(email: string, redirectTo: string): Promise<void>
   redefinirSenha(novaSenha: string): Promise<void>
+  atualizarPerfil(id: string, dados: { nome: string; telefone: string }): Promise<void>
   /** Notifica login/logout/refresh. Retorna função para cancelar. */
   aoMudarSessao(cb: (evento: string) => void): () => void
 }

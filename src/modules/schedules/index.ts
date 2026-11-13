@@ -6,3 +6,5 @@ export const escalas = criarUseCasesEscalas(supabaseEscalasRepository)
 
 export * from './domain/Escala'
 export * from './domain/Inscricao'
+export * from './domain/Calendario'
+export * from './domain/Exportacao'

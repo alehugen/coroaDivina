@@ -4,6 +4,7 @@ import {
   PhCalendarDots,
   PhGearSix,
   PhSignOut,
+  PhUserCircle,
 } from '@phosphor-icons/vue'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -75,6 +76,10 @@ async function sair() {
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem @select="router.push('/perfil')">
+                <PhUserCircle />
+                Meu perfil
+              </DropdownMenuItem>
               <DropdownMenuItem @select="sair">
                 <PhSignOut />
                 Sair

@@ -11,6 +11,7 @@ import {
   PhWarningCircle,
 } from '@phosphor-icons/vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -43,11 +44,17 @@ onUnmounted(store.pararDeObservar)
 const meuId = computed(() => session.conta?.id ?? '')
 const dias = computed(() => store.escala?.dias ?? [])
 
-// Abre no primeiro dia a partir de hoje
+// Abre no dia pedido pela URL (?dia=AAAA-MM-DD, vindo do calendário) ou no primeiro dia a partir de hoje
+const route = useRoute()
+const diaDaUrl = typeof route.query.dia === 'string' ? route.query.dia : null
 const diaId = ref<string | null>(null)
 const dia = computed(
   () =>
-    dias.value.find((d) => d.id === diaId.value) ?? dias.value.find((d) => d.data >= hoje) ?? dias.value[0] ?? null,
+    dias.value.find((d) => d.id === diaId.value) ??
+    dias.value.find((d) => d.data === diaDaUrl) ??
+    dias.value.find((d) => d.data >= hoje) ??
+    dias.value[0] ??
+    null,
 )
 const diaSelecionado = computed({
   get: () => dia.value?.id ?? null,

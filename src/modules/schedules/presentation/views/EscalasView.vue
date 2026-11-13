@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { PhArrowRight, PhCalendarBlank, PhWarningCircle } from '@phosphor-icons/vue'
+import { PhArrowRight, PhCalendarBlank, PhListBullets, PhWarningCircle, PhCalendarDots } from '@phosphor-icons/vue'
+import { useLocalStorage } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -7,22 +8,32 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import { Progress } from '@/components/ui/progress'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { hojeISO } from '@/shared/lib/datas'
+import { hojeISO, type DataISO } from '@/shared/lib/datas'
 import { EmptyState } from '@/shared/ui'
 import { escalas } from '../..'
+import { eventosPorData } from '../../domain/Calendario'
 import { percentual, rotuloPeriodo, type EscalaComResumo } from '../../domain/Escala'
+import type { MinhaInscricao } from '../../domain/Inscricao'
+import CalendarioEscalas from '../components/CalendarioEscalas.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 
 const lista = ref<EscalaComResumo[]>([])
+const dias = ref<{ escalaId: string; data: DataISO }[]>([])
+const minhas = ref<MinhaInscricao[]>([])
 const carregando = ref(true)
 const erro = ref('')
 const hoje = hojeISO()
 
+/** Lista ou calendário — lembrado neste aparelho. */
+const modo = useLocalStorage<'lista' | 'calendario'>('escalas-modo', 'lista')
+
 onMounted(async () => {
-  const r = await escalas.listar()
+  const [l, d, m] = await Promise.all([escalas.listar(), escalas.listarDias(), escalas.minhasInscricoes()])
   carregando.value = false
-  if (r.ok) lista.value = r.value
-  else erro.value = r.error
+  if (l.ok) lista.value = l.value
+  else erro.value = l.error
+  if (d.ok) dias.value = d.value
+  if (m.ok) minhas.value = m.value
 })
 
 // Todas as escalas são visíveis para todos; o status só limita as ações.
@@ -37,22 +48,34 @@ const anteriores = computed(() =>
   lista.value.filter(ehAnterior).sort((a, b) => b.dataInicio.localeCompare(a.dataInicio)),
 )
 const visiveis = computed(() => (filtro.value === 'atuais' ? atuais.value : anteriores.value))
+
+const eventos = computed(() => eventosPorData(dias.value, lista.value, minhas.value))
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 class="text-2xl font-bold">Escalas</h1>
-      <Tabs v-model="filtro">
-        <TabsList class="h-9!">
-          <TabsTrigger value="atuais" class="gap-1.5 px-3">
-            Atuais e próximas <span class="text-xs text-muted-foreground tabular-nums">{{ atuais.length }}</span>
-          </TabsTrigger>
-          <TabsTrigger value="anteriores" class="gap-1.5 px-3">
-            Anteriores <span class="text-xs text-muted-foreground tabular-nums">{{ anteriores.length }}</span>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div class="flex flex-wrap items-center gap-2">
+        <Tabs v-if="modo === 'lista'" v-model="filtro">
+          <TabsList class="h-9!">
+            <TabsTrigger value="atuais" class="gap-1.5 px-3">
+              Atuais e próximas <span class="text-xs text-muted-foreground tabular-nums">{{ atuais.length }}</span>
+            </TabsTrigger>
+            <TabsTrigger value="anteriores" class="gap-1.5 px-3">
+              Anteriores <span class="text-xs text-muted-foreground tabular-nums">{{ anteriores.length }}</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <Tabs v-model="modo">
+          <TabsList class="h-9!">
+            <TabsTrigger value="lista" class="px-3" aria-label="Ver em lista"><PhListBullets /> Lista</TabsTrigger>
+            <TabsTrigger value="calendario" class="px-3" aria-label="Ver em calendário">
+              <PhCalendarDots /> Calendário
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
     </div>
 
     <Alert v-if="erro" variant="destructive">
@@ -63,6 +86,8 @@ const visiveis = computed(() => (filtro.value === 'atuais' ? atuais.value : ante
     <div v-if="carregando" class="flex justify-center py-12 text-primary">
       <Spinner class="size-6" />
     </div>
+
+    <CalendarioEscalas v-else-if="modo === 'calendario'" :eventos="eventos" :hoje="hoje" />
 
     <EmptyState
       v-else-if="!visiveis.length"

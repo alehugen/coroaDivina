@@ -3,8 +3,11 @@ import { fail, ok, type Result } from '@/shared/lib/result'
 import {
   SENHA_MIN,
   validarCadastro,
+  validarPerfil,
   type DadosCadastro,
+  type DadosPerfil,
   type ErrosCadastro,
+  type ErrosPerfil,
 } from '../domain/Cadastro'
 import { criarEmail } from '../domain/Email'
 import type { AuthRepository } from './ports/AuthRepository'
@@ -45,6 +48,17 @@ export function criarUseCasesIdentidade(repo: AuthRepository) {
         return ok(undefined)
       } catch (err) {
         return fail(traduzErro(err))
+      }
+    },
+
+    async atualizarPerfil(id: string, dados: DadosPerfil): Promise<Result<void, ErrosPerfil & { geral?: string }>> {
+      const v = validarPerfil(dados)
+      if (!v.ok) return v
+      try {
+        await repo.atualizarPerfil(id, v.value)
+        return ok(undefined)
+      } catch (e) {
+        return fail({ geral: traduzErro(e) })
       }
     },
 

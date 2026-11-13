@@ -22,6 +22,8 @@ export interface EscalasRepository {
   listar(): Promise<EscalaComResumo[]>
   obter(id: string): Promise<EscalaDetalhada | null>
   listarOrgas(): Promise<MandatoRef[]>
+  /** Datas de todas as escalas (para o calendário). */
+  listarDias(): Promise<{ escalaId: string; data: DataISO }[]>
 
   criar(dados: NovaEscala): Promise<string>
   duplicar(origemId: string, titulo: string, novoInicio: DataISO): Promise<string>

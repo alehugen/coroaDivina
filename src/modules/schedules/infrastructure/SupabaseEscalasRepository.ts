@@ -142,6 +142,15 @@ export const supabaseEscalasRepository: EscalasRepository = {
     return data
   },
 
+  async listarDias() {
+    const { data, error } = await supabase
+      .from('escala_dias')
+      .select('escala_id, data')
+      .returns<{ escala_id: string; data: string }[]>()
+    if (error) throw error
+    return data.map((r) => ({ escalaId: r.escala_id, data: r.data }))
+  },
+
   async criar(d) {
     const { data, error } = await supabase.rpc('criar_escala', {
       p_titulo: d.titulo,

@@ -66,6 +66,10 @@ const routes: RouteRecordRaw[] = [
         props: true,
       },
       {
+        path: 'perfil',
+        component: () => import('@/modules/identity/presentation/views/PerfilView.vue'),
+      },
+      {
         path: 'minhas-escalas',
         component: () => import('@/modules/schedules/presentation/views/MinhasEscalasView.vue'),
       },

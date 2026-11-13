@@ -17,6 +17,7 @@ export function criarUseCasesEscalas(repo: EscalasRepository) {
     listar: () => tentar(() => repo.listar()),
     obter: (id: string) => tentar(() => repo.obter(id)),
     listarOrgas: () => tentar(() => repo.listarOrgas()),
+    listarDias: () => tentar(() => repo.listarDias()),
 
     async criar(dados: NovaEscala): Promise<Result<string>> {
       const v = validarNovaEscala(dados)
