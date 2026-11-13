@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { AppLogo, BaseCard, ThemeToggle } from '@/shared/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AppLogo, ThemeToggle } from '@/shared/ui'
 
 defineProps<{ titulo: string; subtitulo?: string }>()
 </script>
@@ -13,14 +14,16 @@ defineProps<{ titulo: string; subtitulo?: string }>()
 
     <main class="flex flex-1 items-start justify-center px-4 pb-12 pt-4 sm:items-center sm:pt-0">
       <div class="w-full max-w-md">
-        <div class="mb-6 text-center">
-          <h1 class="text-2xl font-bold text-text">{{ titulo }}</h1>
-          <p v-if="subtitulo" class="mt-1 text-muted">{{ subtitulo }}</p>
-        </div>
-        <BaseCard>
-          <slot />
-        </BaseCard>
-        <div class="mt-6 text-center text-sm text-muted">
+        <Card class="py-6">
+          <CardHeader class="px-6 text-center">
+            <CardTitle class="text-xl font-bold">{{ titulo }}</CardTitle>
+            <CardDescription v-if="subtitulo">{{ subtitulo }}</CardDescription>
+          </CardHeader>
+          <CardContent class="px-6">
+            <slot />
+          </CardContent>
+        </Card>
+        <div class="mt-6 text-center text-sm text-muted-foreground">
           <slot name="rodape" />
         </div>
       </div>

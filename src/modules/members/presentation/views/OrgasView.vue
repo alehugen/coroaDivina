@@ -1,28 +1,20 @@
 <script setup lang="ts">
+import { PhCrown, PhStopCircle, PhTrash, PhWarning, PhWarningCircle } from '@phosphor-icons/vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { FieldGroup } from '@/components/ui/field'
+import { Spinner } from '@/components/ui/spinner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useSessionStore } from '@/modules/identity'
 import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
 import { formatarData, hojeISO } from '@/shared/lib/datas'
-import {
-  AvatarIniciais,
-  BaseAlert,
-  BaseBadge,
-  BaseButton,
-  BaseCard,
-  BaseInput,
-  BaseSelect,
-  BaseSpinner,
-  EmptyState,
-} from '@/shared/ui'
+import { EmptyState, FormInput, FormSelect, UserAvatar } from '@/shared/ui'
 import { membros } from '../..'
-import {
-  fimSugerido,
-  situacao,
-  sobreposicoes,
-  type Mandato,
-  type SituacaoMandato,
-} from '../../domain/Mandato'
+import { fimSugerido, situacao, sobreposicoes, type Mandato, type SituacaoMandato } from '../../domain/Mandato'
 import { useMembersStore } from '../stores/members'
 
 const store = useMembersStore()
@@ -122,92 +114,93 @@ async function remover(m: Mandato) {
 
 <template>
   <div class="grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
-    <BaseCard>
-      <h2 class="font-semibold text-text">Novo mandato de Orgã</h2>
-      <p class="mt-1 text-sm text-muted">
-        O cargo é rotativo. Durante o período, a pessoa pode criar e gerenciar escalas.
-      </p>
-
-      <form class="mt-5 flex flex-col gap-4" novalidate @submit.prevent="criar">
-        <BaseAlert v-if="erroForm" tone="danger">{{ erroForm }}</BaseAlert>
-        <BaseSelect
-          v-model="form.profileId"
-          label="Sócio"
-          placeholder="Selecione…"
-          :opcoes="opcoesSocios"
-          required
-        />
-        <div class="grid grid-cols-2 gap-3">
-          <BaseInput v-model="form.inicio" label="Início" type="date" required />
-          <BaseInput
-            v-model="form.fim"
-            label="Fim"
-            type="date"
-            required
-            @update:model-value="fimEditado = true"
-          />
-        </div>
-        <BaseAlert v-if="conflitos.length" tone="warning">
-          Período coincide com o mandato de
-          <strong>{{ conflitos.map((c) => c.nome).join(', ') }}</strong>. Ambos terão acesso de Orgã
-          nos dias em comum.
-        </BaseAlert>
-        <BaseButton type="submit" :loading="salvando" block>Cadastrar mandato</BaseButton>
-      </form>
-    </BaseCard>
+    <Card>
+      <CardHeader>
+        <CardTitle>Novo mandato de Orgã</CardTitle>
+        <CardDescription>O cargo é rotativo. Durante o período, a pessoa pode criar e gerenciar escalas.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form novalidate @submit.prevent="criar">
+          <FieldGroup class="gap-4">
+            <Alert v-if="erroForm" variant="destructive">
+              <PhWarningCircle />
+              <AlertDescription>{{ erroForm }}</AlertDescription>
+            </Alert>
+            <FormSelect v-model="form.profileId" label="Sócio" placeholder="Selecione…" :opcoes="opcoesSocios" required />
+            <div class="grid grid-cols-2 gap-3">
+              <FormInput v-model="form.inicio" label="Início" type="date" required />
+              <FormInput v-model="form.fim" label="Fim" type="date" required @update:model-value="fimEditado = true" />
+            </div>
+            <Alert v-if="conflitos.length" class="border-warning/40 bg-warning-soft">
+              <PhWarning class="text-warning" />
+              <AlertDescription class="text-foreground">
+                Período coincide com o mandato de
+                <strong>{{ conflitos.map((c) => c.nome).join(', ') }}</strong>. Ambos terão acesso de Orgã nos dias em comum.
+              </AlertDescription>
+            </Alert>
+            <Button type="submit" size="lg" class="h-10 w-full" :disabled="salvando">
+              <Spinner v-if="salvando" />
+              Cadastrar mandato
+            </Button>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
 
     <div class="flex flex-col gap-6">
       <div v-if="store.carregandoMandatos && !store.mandatos.length" class="flex justify-center py-12 text-primary">
-        <BaseSpinner class="size-6" />
+        <Spinner class="size-6" />
       </div>
 
       <EmptyState
         v-else-if="!store.mandatos.length"
+        :icone="PhCrown"
         titulo="Nenhum mandato cadastrado"
         descricao="Cadastre quem é a Orgã atual e as próximas, com as datas de início e fim."
       />
 
       <template v-else>
         <section v-for="s in SECOES" v-show="grupos[s.chave].length" :key="s.chave">
-          <h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">{{ s.titulo }}</h2>
-          <ul class="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+          <h2 class="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{{ s.titulo }}</h2>
+          <ul class="divide-y overflow-hidden rounded-xl border bg-card">
             <li
               v-for="m in grupos[s.chave]"
               :key="m.id"
-              class="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:px-5"
+              class="flex items-center gap-3 px-4 py-3 sm:px-5"
               :class="s.chave === 'encerrado' && 'opacity-70'"
             >
-              <div class="flex flex-1 items-center gap-3">
-                <AvatarIniciais :nome="m.nome" />
-                <div>
-                  <p class="flex items-center gap-2 font-medium text-text">
-                    {{ m.nome }}
-                    <BaseBadge v-if="s.chave === 'vigente'" tone="accent">Orgã atual</BaseBadge>
-                  </p>
-                  <p class="text-sm text-muted">
-                    {{ formatarData(m.inicio) }} a {{ formatarData(m.fim) }}
-                  </p>
-                </div>
+              <UserAvatar :nome="m.nome" />
+              <div class="min-w-0 flex-1">
+                <p class="flex flex-wrap items-center gap-2 font-medium">
+                  {{ m.nome }}
+                  <Badge v-if="s.chave === 'vigente'" class="bg-highlight text-highlight-foreground">Orgã atual</Badge>
+                </p>
+                <p class="text-sm text-muted-foreground">{{ formatarData(m.inicio) }} a {{ formatarData(m.fim) }}</p>
               </div>
-              <div class="flex gap-2">
-                <BaseButton
-                  v-if="s.chave === 'vigente'"
-                  size="sm"
-                  variant="secondary"
-                  :loading="ocupado === m.id"
-                  @click="encerrar(m)"
-                >
-                  Encerrar agora
-                </BaseButton>
-                <BaseButton
-                  size="sm"
-                  variant="ghost"
-                  :disabled="ocupado === m.id"
-                  @click="remover(m)"
-                >
-                  Remover
-                </BaseButton>
-              </div>
+              <Spinner v-if="ocupado === m.id" class="text-primary" />
+              <Tooltip v-if="s.chave === 'vigente'">
+                <TooltipTrigger as-child>
+                  <Button variant="ghost" size="icon-lg" aria-label="Encerrar agora" :disabled="ocupado === m.id" @click="encerrar(m)">
+                    <PhStopCircle class="size-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Encerrar agora</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon-lg"
+                    class="hover:text-destructive"
+                    aria-label="Remover mandato"
+                    :disabled="ocupado === m.id"
+                    @click="remover(m)"
+                  >
+                    <PhTrash class="size-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Remover</TooltipContent>
+              </Tooltip>
             </li>
           </ul>
         </section>

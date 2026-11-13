@@ -1,17 +1,35 @@
 <script setup lang="ts">
+import {
+  PhCalendarCheck,
+  PhCalendarDots,
+  PhGearSix,
+  PhSignOut,
+} from '@phosphor-icons/vue'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { primeiroNome, useSessionStore } from '@/modules/identity'
-import { AppLogo, BaseBadge, ThemeToggle } from '@/shared/ui'
+import { AppLogo, ThemeToggle, UserAvatar } from '@/shared/ui'
 
 const session = useSessionStore()
 const router = useRouter()
 
-const links = computed(() => [
-  { to: '/escalas', label: 'Escalas', visivel: true },
-  { to: '/minhas-escalas', label: 'Minhas escalas', visivel: true },
-  { to: '/admin', label: 'Administração', visivel: session.gestor },
-])
+const links = computed(() =>
+  [
+    { to: '/escalas', label: 'Escalas', icone: PhCalendarDots, visivel: true },
+    { to: '/minhas-escalas', label: 'Minhas escalas', icone: PhCalendarCheck, visivel: true },
+    { to: '/admin', label: 'Administração', icone: PhGearSix, visivel: session.gestor },
+  ].filter((l) => l.visivel),
+)
 
 async function sair() {
   await session.sair()
@@ -20,58 +38,72 @@ async function sair() {
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col">
-    <header class="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur">
+  <div class="flex min-h-dvh flex-col pb-16 md:pb-0">
+    <header class="sticky top-0 z-20 border-b bg-card/90 backdrop-blur">
       <div class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
         <RouterLink to="/escalas" class="shrink-0"><AppLogo /></RouterLink>
 
         <nav class="hidden flex-1 items-center gap-1 md:flex" aria-label="Principal">
-          <template v-for="l in links" :key="l.to">
-            <RouterLink
-              v-if="l.visivel"
-              :to="l.to"
-              class="rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-surface-2 hover:text-text"
-              active-class="!bg-primary-soft !text-primary"
-            >
-              {{ l.label }}
-            </RouterLink>
-          </template>
+          <RouterLink
+            v-for="l in links"
+            :key="l.to"
+            :to="l.to"
+            class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            active-class="!bg-accent !text-accent-foreground"
+          >
+            <component :is="l.icone" class="size-4" />
+            {{ l.label }}
+          </RouterLink>
         </nav>
 
         <div class="ml-auto flex items-center gap-1">
-          <div class="mr-2 hidden text-right sm:block">
-            <p class="text-sm font-medium text-text">{{ primeiroNome(session.conta) }}</p>
-            <BaseBadge v-if="session.admin" tone="primary">Admin</BaseBadge>
-            <BaseBadge v-else-if="session.conta?.isOrga" tone="accent">Orgã</BaseBadge>
-          </div>
           <ThemeToggle />
-          <button
-            type="button"
-            class="rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-surface-2 hover:text-text"
-            @click="sair"
-          >
-            Sair
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="ghost" class="h-10 gap-2 px-1.5" aria-label="Menu da conta">
+                <UserAvatar :nome="session.conta?.nome ?? ''" size="default" />
+                <span class="hidden text-sm font-medium sm:inline">{{ primeiroNome(session.conta) }}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-56">
+              <DropdownMenuLabel class="flex flex-col gap-1">
+                <span class="truncate text-foreground">{{ session.conta?.nome }}</span>
+                <span class="truncate text-xs font-normal text-muted-foreground">{{ session.conta?.email }}</span>
+                <span class="flex gap-1">
+                  <Badge v-if="session.admin">Admin</Badge>
+                  <Badge v-if="session.conta?.isOrga" class="bg-highlight text-highlight-foreground">Orgã</Badge>
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem @select="sair">
+                <PhSignOut />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-
-      <!-- navegação mobile -->
-      <nav class="flex gap-1 overflow-x-auto px-4 pb-2 md:hidden" aria-label="Principal">
-        <template v-for="l in links" :key="l.to">
-          <RouterLink
-            v-if="l.visivel"
-            :to="l.to"
-            class="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-muted"
-            active-class="!bg-primary-soft !text-primary"
-          >
-            {{ l.label }}
-          </RouterLink>
-        </template>
-      </nav>
     </header>
 
     <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
       <RouterView />
     </main>
+
+    <!-- navegação inferior no celular -->
+    <nav
+      class="fixed inset-x-0 bottom-0 z-20 flex border-t bg-card/95 backdrop-blur md:hidden"
+      aria-label="Principal"
+    >
+      <RouterLink
+        v-for="l in links"
+        :key="l.to"
+        :to="l.to"
+        class="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium text-muted-foreground"
+        active-class="!text-primary"
+      >
+        <component :is="l.icone" class="size-6" />
+        {{ l.label }}
+      </RouterLink>
+    </nav>
   </div>
 </template>

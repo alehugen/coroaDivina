@@ -1,8 +1,30 @@
 <script setup lang="ts">
+import {
+  PhArrowLeft,
+  PhCalendarX,
+  PhCopy,
+  PhCrown,
+  PhDotsThreeVertical,
+  PhPencilSimple,
+  PhPlus,
+  PhTrash,
+  PhWarningCircle,
+} from '@phosphor-icons/vue'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Spinner } from '@/components/ui/spinner'
 import { confirmar } from '@/shared/composables/useConfirm'
-import { BaseAlert, BaseButton, BaseSpinner, EmptyState } from '@/shared/ui'
+import { toast } from '@/shared/composables/useToast'
+import { EmptyState } from '@/shared/ui'
 import { escalas } from '../../..'
 import {
   ocupacao,
@@ -10,12 +32,13 @@ import {
   rotuloPeriodo,
   STATUS_INFO,
   TRANSICOES,
+  type DiaEscala,
   type Transicao,
 } from '../../../domain/Escala'
-import AdicionarDiaModal from '../../components/admin/AdicionarDiaModal.vue'
+import AdicionarDiaDialog from '../../components/admin/AdicionarDiaDialog.vue'
 import DiaPainel from '../../components/admin/DiaPainel.vue'
-import EditarEscalaModal from '../../components/admin/EditarEscalaModal.vue'
-import DuplicarEscalaModal from '../../components/DuplicarEscalaModal.vue'
+import EditarEscalaDialog from '../../components/admin/EditarEscalaDialog.vue'
+import DuplicarEscalaDialog from '../../components/DuplicarEscalaDialog.vue'
 import StatusBadge from '../../components/StatusBadge.vue'
 import { useEscalaEditorStore } from '../../stores/escalaEditor'
 
@@ -23,14 +46,18 @@ const props = defineProps<{ id: string }>()
 const router = useRouter()
 const store = useEscalaEditorStore()
 
-watch(() => props.id, (id) => store.carregar(id), { immediate: true })
+watch(
+  () => props.id,
+  (id) => store.carregar(id),
+  { immediate: true },
+)
 
 // --- dia selecionado
 const diaId = ref<string | null>(null)
 const dias = computed(() => store.escala?.dias ?? [])
 const dia = computed(() => dias.value.find((d) => d.id === diaId.value) ?? dias.value[0] ?? null)
 
-function preenchimentoDia(d: (typeof dias.value)[number]) {
+function preenchimentoDia(d: DiaEscala) {
   const ativas = d.funcoes.filter((f) => f.ativa).map(ocupacao)
   const vagas = ativas.reduce((n, o) => n + o.vagas, 0)
   const ocupadas = ativas.reduce((n, o) => n + o.total, 0)
@@ -77,8 +104,9 @@ async function excluir() {
   })
   if (!ok) return
   const r = await escalas.excluir(store.escala.id)
-  if (r.ok) router.replace('/admin/escalas')
-  else await store.executar(async () => r)
+  if (!r.ok) return toast(r.error, 'danger')
+  toast('Escala excluída.')
+  router.replace('/admin/escalas')
 }
 
 const modalEditar = ref(false)
@@ -88,56 +116,70 @@ const modalDia = ref(false)
 
 <template>
   <div class="flex flex-col gap-6">
-    <RouterLink to="/admin/escalas" class="text-sm text-muted hover:text-text">← Escalas</RouterLink>
+    <Button as-child variant="ghost" class="-ml-2 self-start text-muted-foreground">
+      <RouterLink to="/admin/escalas"><PhArrowLeft /> Escalas</RouterLink>
+    </Button>
 
     <div v-if="store.carregando && !store.escala" class="flex justify-center py-12 text-primary">
-      <BaseSpinner class="size-6" />
+      <Spinner class="size-6" />
     </div>
 
-    <BaseAlert v-else-if="store.erro && !store.escala" tone="danger">{{ store.erro }}</BaseAlert>
+    <Alert v-else-if="store.erro && !store.escala" variant="destructive">
+      <PhWarningCircle />
+      <AlertDescription>{{ store.erro }}</AlertDescription>
+    </Alert>
 
     <EmptyState
       v-else-if="store.naoEncontrada"
+      :icone="PhCalendarX"
       titulo="Escala não encontrada"
       descricao="Ela pode ter sido excluída."
     />
 
     <template v-else-if="store.escala">
       <!-- Cabeçalho -->
-      <header class="-mt-3 flex flex-col gap-4 rounded-xl border border-border bg-surface p-5">
-        <div class="flex flex-wrap items-start justify-between gap-3">
+      <header class="-mt-4 flex flex-col gap-4 rounded-xl border bg-card p-5">
+        <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
-              <h2 class="text-xl font-semibold text-text">{{ store.escala.titulo }}</h2>
+              <h2 class="text-xl font-semibold">{{ store.escala.titulo }}</h2>
               <StatusBadge :status="store.escala.status" />
             </div>
-            <p class="mt-1 text-sm text-muted">
+            <p class="mt-1 text-sm text-muted-foreground">
               {{ rotuloPeriodo(store.escala.dataInicio, store.escala.dataFim) }}
-              <template v-if="store.orgas"> · Orgã: {{ store.orgas }}</template>
             </p>
-            <p v-if="store.escala.descricao" class="mt-2 whitespace-pre-line text-sm text-text">
-              {{ store.escala.descricao }}
+            <p v-if="store.orgas" class="mt-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+              <PhCrown class="size-4 text-highlight" weight="fill" /> Orgã: {{ store.orgas }}
             </p>
+            <p v-if="store.escala.descricao" class="mt-2 text-sm whitespace-pre-line">{{ store.escala.descricao }}</p>
           </div>
-          <div class="flex flex-wrap gap-2">
-            <BaseButton size="sm" variant="ghost" @click="modalEditar = true">Editar</BaseButton>
-            <BaseButton size="sm" variant="ghost" @click="modalDuplicar = true">Duplicar</BaseButton>
-            <BaseButton size="sm" variant="ghost" class="text-danger" @click="excluir">Excluir</BaseButton>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="ghost" size="icon-lg" aria-label="Mais ações">
+                <PhDotsThreeVertical class="size-5" weight="bold" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem @select="modalEditar = true"><PhPencilSimple /> Editar título e descrição</DropdownMenuItem>
+              <DropdownMenuItem @select="modalDuplicar = true"><PhCopy /> Duplicar</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" @select="excluir"><PhTrash /> Excluir escala</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <div class="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p class="text-sm text-muted">{{ STATUS_INFO[store.escala.status].descricao }}</p>
+        <div class="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-sm text-muted-foreground">{{ STATUS_INFO[store.escala.status].descricao }}</p>
           <div class="flex shrink-0 flex-wrap gap-2">
-            <BaseButton
+            <Button
               v-for="t in TRANSICOES[store.escala.status]"
               :key="t.para"
-              size="sm"
-              :variant="t.principal ? 'primary' : 'secondary'"
+              size="lg"
+              :variant="t.principal ? 'default' : 'outline'"
               @click="mudarStatus(t)"
             >
               {{ t.rotulo }}
-            </BaseButton>
+            </Button>
           </div>
         </div>
       </header>
@@ -149,42 +191,28 @@ const modalDia = ref(false)
           :key="d.id"
           type="button"
           class="flex shrink-0 flex-col items-start rounded-lg border px-3 py-2 text-left transition-colors"
-          :class="
-            dia?.id === d.id
-              ? 'border-primary bg-primary-soft'
-              : 'border-border bg-surface hover:border-primary/40'
-          "
+          :class="dia?.id === d.id ? 'border-primary bg-accent' : 'bg-card hover:border-primary/40'"
           :aria-current="dia?.id === d.id ? 'page' : undefined"
           @click="diaId = d.id"
         >
-          <span class="text-sm font-semibold text-text">{{ rotuloDiaCurto(d.data) }}</span>
+          <span class="text-sm font-semibold">{{ rotuloDiaCurto(d.data) }}</span>
           <span
-            class="text-xs"
-            :class="preenchimentoDia(d).completo ? 'font-medium text-success' : 'text-muted'"
+            class="text-xs tabular-nums"
+            :class="preenchimentoDia(d).completo ? 'font-medium text-success' : 'text-muted-foreground'"
           >
             {{ preenchimentoDia(d).ocupadas }}/{{ preenchimentoDia(d).vagas }}
           </span>
         </button>
-        <button
-          type="button"
-          class="shrink-0 rounded-lg border border-dashed border-border px-4 text-sm font-medium text-muted hover:border-primary hover:text-primary"
-          @click="modalDia = true"
-        >
-          + Dia
-        </button>
+        <Button variant="outline" class="h-auto shrink-0 border-dashed px-4 text-muted-foreground" @click="modalDia = true">
+          <PhPlus /> Dia
+        </Button>
       </nav>
 
-      <DiaPainel
-        v-if="dia"
-        :key="dia.id"
-        :dia="dia"
-        :unico-dia="dias.length === 1"
-        @removido="diaId = null"
-      />
+      <DiaPainel v-if="dia" :key="dia.id" :dia="dia" :unico-dia="dias.length === 1" @removido="diaId = null" />
 
-      <EditarEscalaModal v-model="modalEditar" />
-      <DuplicarEscalaModal v-model="modalDuplicar" :origem="store.escala" />
-      <AdicionarDiaModal v-model="modalDia" @adicionado="selecionarPorData" />
+      <EditarEscalaDialog v-model="modalEditar" />
+      <DuplicarEscalaDialog v-model="modalDuplicar" :origem="store.escala" />
+      <AdicionarDiaDialog v-model="modalDia" @adicionado="selecionarPorData" />
     </template>
   </div>
 </template>

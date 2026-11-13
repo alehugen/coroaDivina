@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { PhHourglassMedium, PhProhibit } from '@phosphor-icons/vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthLayout from '@/app/layouts/AuthLayout.vue'
-import { BaseButton } from '@/shared/ui'
+import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { primeiroNome } from '../../domain/Conta'
 import { useSessionStore } from '../stores/session'
 
@@ -10,9 +12,7 @@ const session = useSessionStore()
 const router = useRouter()
 const verificando = ref(false)
 
-const recusado = computed(() =>
-  ['rejeitado', 'inativo'].includes(session.conta?.status ?? ''),
-)
+const recusado = computed(() => ['rejeitado', 'inativo'].includes(session.conta?.status ?? ''))
 
 async function verificar() {
   verificando.value = true
@@ -28,26 +28,29 @@ async function sair() {
 </script>
 
 <template>
-  <AuthLayout
-    :titulo="recusado ? 'Acesso indisponível' : `Olá, ${primeiroNome(session.conta)}!`"
-  >
-    <div class="flex flex-col gap-4 text-center">
+  <AuthLayout :titulo="recusado ? 'Acesso indisponível' : `Olá, ${primeiroNome(session.conta)}!`">
+    <div class="flex flex-col items-center gap-4 text-center">
+      <span
+        class="flex size-14 items-center justify-center rounded-full"
+        :class="recusado ? 'bg-destructive/10 text-destructive' : 'bg-accent text-accent-foreground'"
+      >
+        <component :is="recusado ? PhProhibit : PhHourglassMedium" class="size-7" />
+      </span>
       <template v-if="recusado">
-        <p class="text-text">Seu acesso não está ativo no momento.</p>
-        <p class="text-sm text-muted">Em caso de dúvida, procure a administração do núcleo.</p>
+        <p>Seu acesso não está ativo no momento.</p>
+        <p class="text-sm text-muted-foreground">Em caso de dúvida, procure a administração do núcleo.</p>
       </template>
       <template v-else>
-        <p class="text-text">Seu cadastro foi recebido e está <strong>aguardando aprovação</strong>.</p>
-        <p class="text-sm text-muted">
+        <p>Seu cadastro foi recebido e está <strong>aguardando aprovação</strong>.</p>
+        <p class="text-sm text-muted-foreground">
           Você receberá um e-mail assim que um administrador liberar seu acesso.
         </p>
-        <BaseButton variant="secondary" :loading="verificando" @click="verificar">
+        <Button variant="outline" size="lg" :disabled="verificando" @click="verificar">
+          <Spinner v-if="verificando" />
           Verificar novamente
-        </BaseButton>
+        </Button>
       </template>
-      <button type="button" class="text-sm font-medium text-muted hover:text-text" @click="sair">
-        Sair
-      </button>
+      <Button variant="link" class="text-muted-foreground" @click="sair">Sair</Button>
     </div>
   </AuthLayout>
 </template>

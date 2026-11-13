@@ -1,8 +1,13 @@
 <script setup lang="ts">
+import { PhWarningCircle } from '@phosphor-icons/vue'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AuthLayout from '@/app/layouts/AuthLayout.vue'
-import { BaseAlert, BaseButton, BaseInput } from '@/shared/ui'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { FieldGroup } from '@/components/ui/field'
+import { Spinner } from '@/components/ui/spinner'
+import { FormInput } from '@/shared/ui'
 import { identidade } from '../..'
 import { useSessionStore } from '../stores/session'
 
@@ -26,36 +31,36 @@ async function entrar() {
   }
   await session.recarregar()
   carregando.value = false
-  const destino = typeof route.query.r === 'string' && route.query.r.startsWith('/') ? route.query.r : '/escalas'
-  router.replace(destino)
+  const r2 = route.query.r
+  router.replace(typeof r2 === 'string' && r2.startsWith('/') ? r2 : '/escalas')
 }
 </script>
 
 <template>
   <AuthLayout titulo="Entrar" subtitulo="Acesse as escalas de trabalho do núcleo">
-    <form class="flex flex-col gap-4" novalidate @submit.prevent="entrar">
-      <BaseAlert v-if="erro" tone="danger">{{ erro }}</BaseAlert>
-      <BaseInput v-model="email" label="E-mail" type="email" autocomplete="email" required />
-      <BaseInput
-        v-model="senha"
-        label="Senha"
-        type="password"
-        autocomplete="current-password"
-        required
-      />
-      <div class="-mt-1 text-right">
-        <RouterLink to="/esqueci-senha" class="text-sm font-medium text-primary hover:underline">
-          Esqueci minha senha
-        </RouterLink>
-      </div>
-      <BaseButton type="submit" size="lg" block :loading="carregando">Entrar</BaseButton>
+    <form novalidate @submit.prevent="entrar">
+      <FieldGroup>
+        <Alert v-if="erro" variant="destructive">
+          <PhWarningCircle />
+          <AlertDescription>{{ erro }}</AlertDescription>
+        </Alert>
+        <FormInput v-model="email" label="E-mail" type="email" autocomplete="email" required />
+        <div class="flex flex-col gap-2">
+          <FormInput v-model="senha" label="Senha" type="password" autocomplete="current-password" required />
+          <RouterLink to="/esqueci-senha" class="self-end text-sm font-medium text-primary hover:underline">
+            Esqueci minha senha
+          </RouterLink>
+        </div>
+        <Button type="submit" size="lg" class="h-11 w-full" :disabled="carregando">
+          <Spinner v-if="carregando" />
+          Entrar
+        </Button>
+      </FieldGroup>
     </form>
 
     <template #rodape>
       Ainda não tem cadastro?
-      <RouterLink to="/cadastro" class="font-semibold text-primary hover:underline">
-        Cadastre-se
-      </RouterLink>
+      <RouterLink to="/cadastro" class="font-semibold text-primary hover:underline">Cadastre-se</RouterLink>
     </template>
   </AuthLayout>
 </template>

@@ -1,13 +1,34 @@
 <script setup lang="ts">
+import {
+  PhArrowDown,
+  PhArrowUp,
+  PhDotsThreeVertical,
+  PhListChecks,
+  PhPencilSimple,
+  PhPlus,
+  PhTrash,
+  PhWarningCircle,
+} from '@phosphor-icons/vue'
 import { onMounted, ref } from 'vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Spinner } from '@/components/ui/spinner'
+import { Switch } from '@/components/ui/switch'
 import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
 import type { Result } from '@/shared/lib/result'
-import { BaseAlert, BaseButton, BaseSpinner, BaseSwitch, EmptyState, IconButton } from '@/shared/ui'
+import { EmptyState } from '@/shared/ui'
 import { catalogo } from '../..'
 import type { Area, AreaComFuncoes, FuncaoModelo } from '../../domain/Catalogo'
-import AreaFormModal from '../components/AreaFormModal.vue'
-import FuncaoFormModal from '../components/FuncaoFormModal.vue'
+import AreaFormDialog from '../components/AreaFormDialog.vue'
+import FuncaoFormDialog from '../components/FuncaoFormDialog.vue'
 import { useCatalogStore } from '../stores/catalog'
 
 const store = useCatalogStore()
@@ -64,75 +85,97 @@ async function removerFuncao(f: FuncaoModelo) {
 <template>
   <section class="flex flex-col gap-5">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p class="max-w-2xl text-sm text-muted">
-        Áreas e funções usadas como base ao criar escalas. As vagas definidas aqui são o padrão; em
-        cada escala é possível ajustar por dia.
+      <p class="max-w-2xl text-sm text-muted-foreground">
+        Áreas e funções usadas como base ao criar escalas. As vagas definidas aqui são o padrão; em cada
+        escala é possível ajustar por dia.
       </p>
-      <BaseButton class="shrink-0" @click="editarArea(null)">+ Nova área</BaseButton>
+      <Button size="lg" class="shrink-0" @click="editarArea(null)"><PhPlus /> Nova área</Button>
     </div>
 
-    <BaseAlert v-if="store.erro" tone="danger">{{ store.erro }}</BaseAlert>
+    <Alert v-if="store.erro" variant="destructive">
+      <PhWarningCircle />
+      <AlertDescription>{{ store.erro }}</AlertDescription>
+    </Alert>
 
     <div v-if="store.carregando && !store.grupos.length" class="flex justify-center py-12 text-primary">
-      <BaseSpinner class="size-6" />
+      <Spinner class="size-6" />
     </div>
 
-    <EmptyState v-else-if="!store.grupos.length" titulo="Nenhuma área cadastrada">
-      <BaseButton class="mt-2" @click="editarArea(null)">Criar primeira área</BaseButton>
+    <EmptyState v-else-if="!store.grupos.length" :icone="PhListChecks" titulo="Nenhuma área cadastrada">
+      <Button @click="editarArea(null)"><PhPlus /> Criar primeira área</Button>
     </EmptyState>
 
-    <article
-      v-for="(a, ia) in store.grupos"
-      :key="a.id"
-      class="overflow-hidden rounded-xl border border-border bg-surface"
-    >
-      <header
-        class="flex items-center gap-3 border-b border-border px-4 py-3 sm:px-5"
-        :style="{ boxShadow: `inset 4px 0 0 ${a.cor}` }"
-      >
+    <article v-for="(a, ia) in store.grupos" :key="a.id" class="overflow-hidden rounded-xl border bg-card">
+      <header class="flex items-center gap-3 border-b px-4 py-2.5 sm:px-5" :style="{ boxShadow: `inset 4px 0 0 ${a.cor}` }">
         <span class="size-3 shrink-0 rounded-full" :style="{ backgroundColor: a.cor }" aria-hidden="true" />
-        <h2 class="flex-1 font-semibold text-text">{{ a.nome }}</h2>
-        <div class="flex items-center">
-          <IconButton rotulo="Mover área para cima" :disabled="ia === 0" @click="executar(() => catalogo.moverArea(store.grupos, a.id, -1))">↑</IconButton>
-          <IconButton rotulo="Mover área para baixo" :disabled="ia === store.grupos.length - 1" @click="executar(() => catalogo.moverArea(store.grupos, a.id, 1))">↓</IconButton>
-          <IconButton rotulo="Editar área" @click="editarArea(a)">✎</IconButton>
-          <IconButton rotulo="Excluir área" perigo @click="removerArea(a)">🗑</IconButton>
-        </div>
+        <h2 class="flex-1 font-semibold">{{ a.nome }}</h2>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="ghost" size="icon-lg" :aria-label="`Ações da área ${a.nome}`">
+              <PhDotsThreeVertical class="size-5" weight="bold" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem @select="editarArea(a)"><PhPencilSimple /> Editar</DropdownMenuItem>
+            <DropdownMenuItem :disabled="ia === 0" @select="executar(() => catalogo.moverArea(store.grupos, a.id, -1))">
+              <PhArrowUp /> Mover para cima
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              :disabled="ia === store.grupos.length - 1"
+              @select="executar(() => catalogo.moverArea(store.grupos, a.id, 1))"
+            >
+              <PhArrowDown /> Mover para baixo
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" @select="removerArea(a)"><PhTrash /> Excluir área</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
-      <ul class="divide-y divide-border">
-        <li
-          v-for="(f, i) in a.funcoes"
-          :key="f.id"
-          class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-5"
-        >
-          <div class="min-w-40 flex-1" :class="!f.ativo && 'opacity-50'">
-            <p class="font-medium text-text">{{ f.nome }}</p>
-            <p class="text-sm text-muted">
-              {{ f.vagasResp }} responsável{{ f.vagasResp === 1 ? '' : 'is' }} ·
-              {{ f.vagasAux }} auxiliar{{ f.vagasAux === 1 ? '' : 'es' }}
-            </p>
-          </div>
-          <BaseSwitch
+      <ul class="divide-y">
+        <li v-for="(f, i) in a.funcoes" :key="f.id" class="flex items-center gap-3 px-4 py-3 sm:px-5">
+          <Switch
             :model-value="f.ativo"
-            :rotulo="f.ativo ? 'Ativa' : 'Inativa'"
-            mostrar-rotulo
+            :aria-label="`${f.nome}: ${f.ativo ? 'ativa' : 'inativa'} para novas escalas`"
             @update:model-value="executar(() => catalogo.alternarFuncao(f))"
           />
-          <div class="flex items-center">
-            <IconButton rotulo="Mover para cima" :disabled="i === 0" @click="executar(() => catalogo.moverFuncao(a.funcoes, f.id, -1))">↑</IconButton>
-            <IconButton rotulo="Mover para baixo" :disabled="i === a.funcoes.length - 1" @click="executar(() => catalogo.moverFuncao(a.funcoes, f.id, 1))">↓</IconButton>
-            <IconButton rotulo="Editar função" @click="editarFuncao(f, a.id)">✎</IconButton>
-            <IconButton rotulo="Excluir função" perigo @click="removerFuncao(f)">🗑</IconButton>
-          </div>
+          <button type="button" class="min-w-0 flex-1 text-left" :class="!f.ativo && 'opacity-50'" @click="editarFuncao(f, a.id)">
+            <p class="truncate font-medium">{{ f.nome }}</p>
+            <p class="text-sm text-muted-foreground">
+              {{ f.vagasResp }} responsável{{ f.vagasResp === 1 ? '' : 'is' }} · {{ f.vagasAux }} auxiliar{{
+                f.vagasAux === 1 ? '' : 'es'
+              }}
+            </p>
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="ghost" size="icon-lg" :aria-label="`Ações da função ${f.nome}`">
+                <PhDotsThreeVertical class="size-5" weight="bold" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem @select="editarFuncao(f, a.id)"><PhPencilSimple /> Editar</DropdownMenuItem>
+              <DropdownMenuItem :disabled="i === 0" @select="executar(() => catalogo.moverFuncao(a.funcoes, f.id, -1))">
+                <PhArrowUp /> Mover para cima
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                :disabled="i === a.funcoes.length - 1"
+                @select="executar(() => catalogo.moverFuncao(a.funcoes, f.id, 1))"
+              >
+                <PhArrowDown /> Mover para baixo
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" @select="removerFuncao(f)"><PhTrash /> Excluir</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </li>
-        <li class="px-4 py-2 sm:px-5">
-          <BaseButton variant="ghost" size="sm" @click="editarFuncao(null, a.id)">+ Nova função</BaseButton>
+        <li class="px-3 py-2 sm:px-4">
+          <Button variant="ghost" class="text-primary" @click="editarFuncao(null, a.id)"><PhPlus /> Nova função</Button>
         </li>
       </ul>
     </article>
 
-    <AreaFormModal v-model="modalArea" :area="areaEditando" />
-    <FuncaoFormModal v-model="modalFuncao" :funcao="funcaoEditando" :area-id="areaDaNovaFuncao" />
+    <AreaFormDialog v-model="modalArea" :area="areaEditando" />
+    <FuncaoFormDialog v-model="modalFuncao" :funcao="funcaoEditando" :area-id="areaDaNovaFuncao" />
   </section>
 </template>

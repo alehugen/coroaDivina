@@ -1,15 +1,19 @@
 <script setup lang="ts">
+import { Spinner } from '@/components/ui/spinner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { useSessionStore } from '@/modules/identity'
-import { BaseSpinner, ConfirmHost, ToastHost } from '@/shared/ui'
+import { AppToaster, ConfirmDialogHost } from '@/shared/ui'
 
 const session = useSessionStore()
 </script>
 
 <template>
-  <div v-if="!session.carregado" class="flex min-h-dvh items-center justify-center text-primary">
-    <BaseSpinner class="size-8" />
-  </div>
-  <RouterView v-else />
-  <ToastHost />
-  <ConfirmHost />
+  <TooltipProvider :delay-duration="300">
+    <div v-if="!session.carregado" class="flex min-h-dvh items-center justify-center text-primary">
+      <Spinner class="size-8" />
+    </div>
+    <RouterView v-else />
+    <AppToaster />
+    <ConfirmDialogHost />
+  </TooltipProvider>
 </template>

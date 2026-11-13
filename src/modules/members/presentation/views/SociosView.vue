@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { PhMagnifyingGlass, PhUsers, PhWarningCircle } from '@phosphor-icons/vue'
 import { computed, onMounted, ref, watch } from 'vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSessionStore } from '@/modules/identity'
 import { confirmar, type ConfirmOpcoes } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
-import { BaseAlert, BaseInput, BaseSpinner, EmptyState, SegmentedControl } from '@/shared/ui'
+import { EmptyState } from '@/shared/ui'
 import { membros } from '../..'
 import {
   acoesPermitidas,
@@ -38,10 +43,7 @@ const opcoes = computed(() => [
 const lista = computed(() => filtrarSocios(store.socios, grupo.value, busca.value))
 const meuId = computed(() => session.conta?.id ?? '')
 
-const ACOES: Record<
-  keyof AcoesSocio,
-  { confirmacao?: (s: Socio) => ConfirmOpcoes; sucesso: (s: Socio) => string }
-> = {
+const ACOES: Record<keyof AcoesSocio, { confirmacao?: (s: Socio) => ConfirmOpcoes; sucesso: (s: Socio) => string }> = {
   aprovar: { sucesso: (s) => `${s.nome} foi aprovado(a) e receberá um e-mail.` },
   reativar: { sucesso: (s) => `${s.nome} foi reativado(a).` },
   rejeitar: {
@@ -65,8 +67,7 @@ const ACOES: Record<
   tornarAdmin: {
     confirmacao: (s) => ({
       titulo: `Tornar ${s.nome} admin?`,
-      mensagem:
-        'Admins podem aprovar sócios, alterar permissões, definir Orgãs e gerenciar todas as escalas.',
+      mensagem: 'Admins podem aprovar sócios, alterar permissões, definir Orgãs e gerenciar todas as escalas.',
       confirmar: 'Tornar admin',
     }),
     sucesso: (s) => `${s.nome} agora é admin.`,
@@ -96,34 +97,48 @@ async function executar(acao: keyof AcoesSocio, s: Socio) {
   }
   ocupado.value = null
 }
+
+const TITULOS_VAZIO: Record<GrupoStatus, string> = {
+  pendente: 'Nenhum cadastro aguardando aprovação',
+  aprovado: 'Nenhum sócio aprovado',
+  inativo: 'Nenhum sócio inativo',
+}
 </script>
 
 <template>
   <section class="flex flex-col gap-4">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <SegmentedControl v-model="grupo" :opcoes="opcoes" rotulo="Filtrar sócios por situação" />
-      <div class="sm:w-72">
-        <BaseInput v-model="busca" label="Buscar" type="search" placeholder="Nome, e-mail ou telefone" />
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <Tabs v-model="grupo">
+        <TabsList class="h-9!">
+          <TabsTrigger v-for="o in opcoes" :key="o.value" :value="o.value" class="gap-1.5 px-3">
+            {{ o.label }}
+            <span class="text-xs text-muted-foreground tabular-nums">{{ o.contador }}</span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+      <div class="relative sm:w-72">
+        <PhMagnifyingGlass class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input v-model="busca" type="search" class="h-10 pl-9" placeholder="Nome, e-mail ou telefone" aria-label="Buscar sócio" />
       </div>
     </div>
 
-    <BaseAlert v-if="store.erro" tone="danger">{{ store.erro }}</BaseAlert>
+    <Alert v-if="store.erro" variant="destructive">
+      <PhWarningCircle />
+      <AlertDescription>{{ store.erro }}</AlertDescription>
+    </Alert>
 
     <div v-if="store.carregandoSocios && !store.socios.length" class="flex justify-center py-12 text-primary">
-      <BaseSpinner class="size-6" />
+      <Spinner class="size-6" />
     </div>
 
     <EmptyState
       v-else-if="!lista.length"
-      :titulo="
-        busca
-          ? 'Ninguém encontrado'
-          : { pendente: 'Nenhum cadastro aguardando aprovação', aprovado: 'Nenhum sócio aprovado', inativo: 'Nenhum sócio inativo' }[grupo]
-      "
+      :icone="PhUsers"
+      :titulo="busca ? 'Ninguém encontrado' : TITULOS_VAZIO[grupo]"
       :descricao="busca ? 'Tente outro nome, e-mail ou telefone.' : undefined"
     />
 
-    <ul v-else class="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+    <ul v-else class="divide-y overflow-hidden rounded-xl border bg-card">
       <SocioItem
         v-for="s in lista"
         :key="s.id"

@@ -1,12 +1,15 @@
 <script setup lang="ts">
+import { PhPlus, PhTrash } from '@phosphor-icons/vue'
 import { computed, ref, watch } from 'vue'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
-import { BaseButton, BaseTextarea } from '@/shared/ui'
+import { FormTextarea } from '@/shared/ui'
 import { escalas } from '../../..'
 import { funcoesPorArea, ocupacao, rotuloDia, type DiaEscala } from '../../../domain/Escala'
 import { useEscalaEditorStore } from '../../stores/escalaEditor'
-import AdicionarFuncaoModal from './AdicionarFuncaoModal.vue'
+import AdicionarFuncaoDialog from './AdicionarFuncaoDialog.vue'
 import FuncaoDiaLinha from './FuncaoDiaLinha.vue'
 
 const props = defineProps<{ dia: DiaEscala; unicoDia: boolean }>()
@@ -41,7 +44,6 @@ async function salvarObservacoes() {
   await store.recarregar()
 }
 
-// --- remover dia
 async function removerDia() {
   const ok = await confirmar({
     titulo: `Remover ${rotuloDia(props.dia.data)} da escala?`,
@@ -63,56 +65,44 @@ const modalFuncao = ref(false)
   <section class="flex flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h3 class="text-lg font-semibold text-text">{{ rotuloDia(dia.data) }}</h3>
-        <p class="text-sm text-muted">
-          {{ totais.ocupadas }} de {{ totais.vagas }} vagas preenchidas
-        </p>
+        <h3 class="text-lg font-semibold">{{ rotuloDia(dia.data) }}</h3>
+        <p class="text-sm text-muted-foreground">{{ totais.ocupadas }} de {{ totais.vagas }} vagas preenchidas</p>
       </div>
       <div class="flex gap-2">
-        <BaseButton size="sm" variant="secondary" @click="modalFuncao = true">+ Função</BaseButton>
-        <BaseButton
-          v-if="!unicoDia"
-          size="sm"
-          variant="ghost"
-          class="text-danger"
-          @click="removerDia"
-        >
-          Remover dia
-        </BaseButton>
+        <Button variant="outline" size="lg" @click="modalFuncao = true"><PhPlus /> Função</Button>
+        <Button v-if="!unicoDia" variant="destructive" size="lg" @click="removerDia"><PhTrash /> Remover dia</Button>
       </div>
     </div>
 
-    <article
-      v-for="g in grupos"
-      :key="g.area.id"
-      class="overflow-hidden rounded-xl border border-border bg-surface"
-    >
+    <article v-for="g in grupos" :key="g.area.id" class="overflow-hidden rounded-xl border bg-card">
       <header
-        class="flex items-center gap-2 border-b border-border px-4 py-2.5 text-sm font-semibold text-text sm:px-5"
+        class="flex items-center gap-2 border-b px-4 py-2.5 text-sm font-semibold sm:px-5"
         :style="{ boxShadow: `inset 4px 0 0 ${g.area.cor}` }"
       >
         <span class="size-2.5 rounded-full" :style="{ backgroundColor: g.area.cor }" aria-hidden="true" />
         {{ g.area.nome }}
       </header>
-      <ul class="divide-y divide-border">
+      <ul class="divide-y">
         <FuncaoDiaLinha v-for="f in g.funcoes" :key="f.id" :funcao="f" />
       </ul>
     </article>
 
-    <p v-if="!dia.funcoes.length" class="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted">
+    <p v-if="!dia.funcoes.length" class="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
       Nenhuma função neste dia.
     </p>
 
-    <div class="rounded-xl border border-border bg-surface p-4 sm:p-5">
-      <BaseTextarea
-        v-model="observacoes"
-        label="Observações do dia"
-        placeholder="Ex.: Jantar com sopa para 80 pessoas. Trazer panelas grandes."
-        hint="Visível para os sócios na grade. Salva ao sair do campo."
-        @blur="salvarObservacoes"
-      />
-    </div>
+    <Card>
+      <CardContent>
+        <FormTextarea
+          v-model="observacoes"
+          label="Observações do dia"
+          placeholder="Ex.: Jantar com sopa para 80 pessoas. Trazer panelas grandes."
+          hint="Visível para os sócios na grade. Salva ao sair do campo."
+          @blur="salvarObservacoes"
+        />
+      </CardContent>
+    </Card>
 
-    <AdicionarFuncaoModal v-model="modalFuncao" :dia="dia" />
+    <AdicionarFuncaoDialog v-model="modalFuncao" :dia="dia" />
   </section>
 </template>

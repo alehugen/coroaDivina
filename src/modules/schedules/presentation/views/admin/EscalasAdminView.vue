@@ -1,17 +1,17 @@
 <script setup lang="ts">
+import { PhCalendarPlus, PhCopy, PhPlus, PhWarningCircle } from '@phosphor-icons/vue'
 import { computed, onMounted, ref } from 'vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Spinner } from '@/components/ui/spinner'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { hojeISO } from '@/shared/lib/datas'
-import {
-  BaseAlert,
-  BaseButton,
-  BaseSpinner,
-  EmptyState,
-  ProgressBar,
-  SegmentedControl,
-} from '@/shared/ui'
+import { EmptyState } from '@/shared/ui'
 import { escalas } from '../../..'
 import { percentual, rotuloPeriodo, type Escala, type EscalaComResumo } from '../../../domain/Escala'
-import DuplicarEscalaModal from '../../components/DuplicarEscalaModal.vue'
+import DuplicarEscalaDialog from '../../components/DuplicarEscalaDialog.vue'
 import StatusBadge from '../../components/StatusBadge.vue'
 
 type Filtro = 'atuais' | 'passadas' | 'arquivadas'
@@ -61,62 +61,74 @@ function duplicar(e: Escala) {
 <template>
   <section class="flex flex-col gap-5">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <SegmentedControl v-model="filtro" :opcoes="opcoes" rotulo="Filtrar escalas" />
-      <BaseButton to="/admin/escalas/nova" class="shrink-0">+ Nova escala</BaseButton>
+      <Tabs v-model="filtro" class="max-w-full overflow-x-auto">
+        <TabsList class="h-9!">
+          <TabsTrigger v-for="o in opcoes" :key="o.value" :value="o.value" class="gap-1.5 px-3">
+            {{ o.label }}
+            <span class="text-xs text-muted-foreground tabular-nums">{{ o.contador }}</span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+      <Button as-child size="lg" class="shrink-0">
+        <RouterLink to="/admin/escalas/nova"><PhPlus /> Nova escala</RouterLink>
+      </Button>
     </div>
 
-    <BaseAlert v-if="erro" tone="danger">{{ erro }}</BaseAlert>
+    <Alert v-if="erro" variant="destructive">
+      <PhWarningCircle />
+      <AlertDescription>{{ erro }}</AlertDescription>
+    </Alert>
 
     <div v-if="carregando" class="flex justify-center py-12 text-primary">
-      <BaseSpinner class="size-6" />
+      <Spinner class="size-6" />
     </div>
 
     <EmptyState
       v-else-if="!visiveis.length"
+      :icone="PhCalendarPlus"
       :titulo="filtro === 'atuais' ? 'Nenhuma escala atual ou próxima' : 'Nada por aqui'"
       :descricao="filtro === 'atuais' ? 'Crie uma nova escala ou duplique uma anterior.' : undefined"
-    />
+    >
+      <Button v-if="filtro === 'atuais'" as-child>
+        <RouterLink to="/admin/escalas/nova"><PhPlus /> Nova escala</RouterLink>
+      </Button>
+    </EmptyState>
 
     <ul v-else class="grid gap-3 md:grid-cols-2">
-      <li
-        v-for="e in visiveis"
-        :key="e.id"
-        class="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 transition-colors hover:border-primary/40"
-      >
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <RouterLink
-              :to="`/admin/escalas/${e.id}`"
-              class="font-semibold text-text hover:text-primary hover:underline"
-            >
-              {{ e.titulo }}
-            </RouterLink>
-            <p class="mt-0.5 text-sm text-muted">
-              {{ rotuloPeriodo(e.dataInicio, e.dataFim) }} · {{ e.resumo.dias }}
-              {{ e.resumo.dias === 1 ? 'dia' : 'dias' }}
-            </p>
-          </div>
-          <StatusBadge :status="e.status" />
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <div class="flex justify-between text-sm">
-            <span class="text-muted">Vagas preenchidas</span>
-            <span class="font-medium text-text">{{ e.resumo.ocupadas }} / {{ e.resumo.vagas }}</span>
-          </div>
-          <ProgressBar
-            :valor="percentual(e.resumo.ocupadas, e.resumo.vagas)"
-            :rotulo="`${e.resumo.ocupadas} de ${e.resumo.vagas} vagas preenchidas`"
-          />
-        </div>
-
-        <div class="flex gap-2">
-          <BaseButton size="sm" variant="secondary" :to="`/admin/escalas/${e.id}`">Gerenciar</BaseButton>
-          <BaseButton size="sm" variant="ghost" @click="duplicar(e)">Duplicar</BaseButton>
-        </div>
+      <li v-for="e in visiveis" :key="e.id">
+        <Card class="h-full">
+          <CardHeader>
+            <CardTitle>
+              <RouterLink :to="`/admin/escalas/${e.id}`" class="hover:text-primary hover:underline">
+                {{ e.titulo }}
+              </RouterLink>
+            </CardTitle>
+            <CardDescription>
+              {{ rotuloPeriodo(e.dataInicio, e.dataFim) }} · {{ e.resumo.dias }} {{ e.resumo.dias === 1 ? 'dia' : 'dias' }}
+            </CardDescription>
+            <CardAction><StatusBadge :status="e.status" /></CardAction>
+          </CardHeader>
+          <CardContent class="flex flex-col gap-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-muted-foreground">Vagas preenchidas</span>
+              <span class="font-medium tabular-nums">{{ e.resumo.ocupadas }} / {{ e.resumo.vagas }}</span>
+            </div>
+            <Progress
+              :model-value="percentual(e.resumo.ocupadas, e.resumo.vagas)"
+              class="h-2"
+              :aria-label="`${e.resumo.ocupadas} de ${e.resumo.vagas} vagas preenchidas`"
+            />
+          </CardContent>
+          <CardFooter class="gap-2 border-t pt-4 pb-4">
+            <Button as-child variant="outline">
+              <RouterLink :to="`/admin/escalas/${e.id}`">Gerenciar</RouterLink>
+            </Button>
+            <Button variant="ghost" @click="duplicar(e)"><PhCopy /> Duplicar</Button>
+          </CardFooter>
+        </Card>
       </li>
     </ul>
 
-    <DuplicarEscalaModal v-model="modalDuplicar" :origem="origem" />
+    <DuplicarEscalaDialog v-model="modalDuplicar" :origem="origem" />
   </section>
 </template>

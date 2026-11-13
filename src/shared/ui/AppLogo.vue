@@ -6,8 +6,8 @@
       <rect x="8" y="22.5" width="16" height="2.5" rx="1" fill="#aacc00" />
     </svg>
     <span class="leading-tight">
-      <span class="block text-sm font-bold text-text">Escalas</span>
-      <span class="block text-xs text-muted">N. Coroa Divina</span>
+      <span class="block text-sm font-bold text-foreground">Escalas</span>
+      <span class="block text-xs text-muted-foreground">N. Coroa Divina</span>
     </span>
   </span>
 </template>

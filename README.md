@@ -4,7 +4,7 @@ App de escalas de trabalho do Núcleo Coroa Divina (UDV): cadastro de sócios co
 escalas por dia/área/função com vagas de **Responsável** e **Auxiliar**, inscrição em tempo real
 e painel de administração.
 
-**Stack:** Vue 3 · TypeScript · Pinia · Vue Router · Tailwind 4 · Supabase · Vercel · Gmail (SMTP)
+**Stack:** Vue 3 · TypeScript · Pinia · Vue Router · Tailwind 4 · shadcn-vue (Reka UI) · Phosphor Icons · Supabase · Vercel · Gmail (SMTP)
 
 ## Perfis
 
@@ -19,7 +19,8 @@ e painel de administração.
 ```
 src/
   app/            router (guards por perfil), layouts
-  shared/         design system (ui/), estilos/tokens, supabase client, utilitários
+  components/ui/  componentes shadcn-vue (gerados pela CLI; `npx shadcn-vue@latest add <nome>`)
+  shared/         componentes compostos do app (ui/), tema/tokens, supabase client, utilitários
   modules/
     identity/     cadastro, login, sessão        domain / application / infrastructure / presentation
     members/      sócios, permissões, mandatos

@@ -14,7 +14,7 @@ interface ConfirmPendente extends ConfirmOpcoes {
 
 const pendente = ref<ConfirmPendente | null>(null)
 
-/** Abre o diálogo de confirmação global (ConfirmHost). Resolve true se confirmado. */
+/** Abre o diálogo de confirmação global (ConfirmDialogHost). Resolve true se confirmado. */
 export function confirmar(opcoes: ConfirmOpcoes): Promise<boolean> {
   pendente.value?.resolve(false)
   return new Promise((resolve) => {

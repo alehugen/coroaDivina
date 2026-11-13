@@ -1,13 +1,28 @@
 <script setup lang="ts">
-defineProps<{ titulo: string; descricao?: string }>()
+import type { Component } from 'vue'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+
+defineProps<{ titulo: string; descricao?: string; icone?: Component }>()
 </script>
 
 <template>
-  <div
-    class="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-surface px-6 py-12 text-center"
-  >
-    <h2 class="font-semibold text-text">{{ titulo }}</h2>
-    <p v-if="descricao" class="max-w-md text-sm text-muted">{{ descricao }}</p>
-    <slot />
-  </div>
+  <Empty class="border bg-card">
+    <EmptyHeader>
+      <EmptyMedia v-if="icone" variant="icon">
+        <component :is="icone" />
+      </EmptyMedia>
+      <EmptyTitle>{{ titulo }}</EmptyTitle>
+      <EmptyDescription v-if="descricao">{{ descricao }}</EmptyDescription>
+    </EmptyHeader>
+    <EmptyContent v-if="$slots.default">
+      <slot />
+    </EmptyContent>
+  </Empty>
 </template>
