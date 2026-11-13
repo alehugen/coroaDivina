@@ -69,9 +69,9 @@ const modalFuncao = ref(false)
 
 <template>
   <section class="flex flex-col gap-4">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <ResumoDia :dia="dia" class="min-w-0 flex-1" />
-      <div class="flex gap-2">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <ResumoDia :dia="dia" class="min-w-0 sm:flex-1" />
+      <div class="flex flex-wrap gap-2 sm:shrink-0">
         <Button variant="outline" size="lg" @click="modalFuncao = true"><PhPlus /> Função</Button>
         <Button v-if="!unicoDia" variant="destructive" size="lg" @click="removerDia"><PhTrash /> Remover dia</Button>
       </div>

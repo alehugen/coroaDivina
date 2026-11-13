@@ -39,6 +39,7 @@ const whatsapp = computed(() => linkWhatsApp(props.socio.telefone))
 const temMenu = computed(
   () => props.acoes.tornarAdmin || props.acoes.removerAdmin || props.acoes.desativar || props.acoes.excluir,
 )
+const temBotoes = computed(() => props.acoes.aprovar || props.acoes.recusarExclusao || props.acoes.reativar)
 </script>
 
 <template>
@@ -74,9 +75,33 @@ const temMenu = computed(
           <PhTrash class="size-4" /> Pediu exclusão da conta em {{ formatarData(socio.exclusaoSolicitadaEm) }}
         </p>
       </div>
+      <Spinner v-if="ocupado && !temBotoes" class="mt-2.5 shrink-0 text-primary" />
+      <DropdownMenu v-if="temMenu">
+        <DropdownMenuTrigger as-child>
+          <Button variant="ghost" size="icon-lg" class="-mt-1 -mr-2 shrink-0" :disabled="ocupado" :aria-label="`Ações para ${socio.nome}`">
+            <PhDotsThreeVertical class="size-5" weight="bold" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem v-if="acoes.tornarAdmin" @select="emit('acao', 'tornarAdmin')">
+            <PhShieldCheck /> Tornar admin
+          </DropdownMenuItem>
+          <DropdownMenuItem v-if="acoes.removerAdmin" @select="emit('acao', 'removerAdmin')">
+            <PhShieldSlash /> Remover admin
+          </DropdownMenuItem>
+          <DropdownMenuSeparator v-if="(acoes.tornarAdmin || acoes.removerAdmin) && (acoes.desativar || acoes.excluir)" />
+          <DropdownMenuItem v-if="acoes.desativar" variant="destructive" @select="emit('acao', 'desativar')">
+            <PhUserMinus /> Desativar
+          </DropdownMenuItem>
+          <DropdownMenuItem v-if="acoes.excluir && !acoes.recusarExclusao" variant="destructive" @select="emit('acao', 'excluir')">
+            <PhTrash /> Excluir permanentemente
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
 
-    <div class="flex items-center gap-2 pl-13 sm:pl-0">
+    <!-- botões de decisão (só quando há algo a decidir) -->
+    <div v-if="temBotoes" class="flex flex-wrap items-center gap-2 pl-13 sm:pl-0">
       <Spinner v-if="ocupado" class="text-primary" />
       <template v-if="acoes.aprovar">
         <Button size="lg" :disabled="ocupado" @click="emit('acao', 'aprovar')">
@@ -97,29 +122,6 @@ const temMenu = computed(
       <Button v-if="acoes.reativar" size="lg" variant="outline" :disabled="ocupado" @click="emit('acao', 'reativar')">
         Reativar
       </Button>
-
-      <DropdownMenu v-if="temMenu">
-        <DropdownMenuTrigger as-child>
-          <Button variant="ghost" size="icon-lg" :disabled="ocupado" :aria-label="`Ações para ${socio.nome}`">
-            <PhDotsThreeVertical class="size-5" weight="bold" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem v-if="acoes.tornarAdmin" @select="emit('acao', 'tornarAdmin')">
-            <PhShieldCheck /> Tornar admin
-          </DropdownMenuItem>
-          <DropdownMenuItem v-if="acoes.removerAdmin" @select="emit('acao', 'removerAdmin')">
-            <PhShieldSlash /> Remover admin
-          </DropdownMenuItem>
-          <DropdownMenuSeparator v-if="(acoes.tornarAdmin || acoes.removerAdmin) && (acoes.desativar || acoes.excluir)" />
-          <DropdownMenuItem v-if="acoes.desativar" variant="destructive" @select="emit('acao', 'desativar')">
-            <PhUserMinus /> Desativar
-          </DropdownMenuItem>
-          <DropdownMenuItem v-if="acoes.excluir && !acoes.recusarExclusao" variant="destructive" @select="emit('acao', 'excluir')">
-            <PhTrash /> Excluir permanentemente
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </div>
   </li>
 </template>

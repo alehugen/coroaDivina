@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PhCalendarDots, PhCrown, PhListChecks, PhUsers } from '@phosphor-icons/vue'
-import { computed, onMounted } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useSessionStore } from '@/modules/identity'
 import { useMembersStore } from '../stores/members'
 
@@ -19,18 +20,30 @@ const abas = computed(() =>
 onMounted(() => {
   if (session.admin && !store.socios.length) store.carregarSocios()
 })
+
+// No celular as abas rolam: mantém a aba ativa à vista
+const navAbas = ref<HTMLElement>()
+const route = useRoute()
+watch(
+  () => route.path,
+  async () => {
+    await nextTick()
+    navAbas.value?.querySelector('.router-link-active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
     <div>
       <h1 class="text-2xl font-bold">Administração</h1>
-      <nav class="mt-4 flex gap-1 overflow-x-auto border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Administração">
+      <nav ref="navAbas" class="mt-4 flex gap-1 overflow-x-auto border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Administração">
         <RouterLink
           v-for="a in abas"
           :key="a.to"
           :to="a.to"
-          class="-mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          class="-mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-2.5 py-2.5 sm:gap-2 sm:px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           active-class="!border-primary !text-primary"
         >
           <component :is="a.icone" class="size-4" />

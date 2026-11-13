@@ -15,7 +15,7 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: 'Escalas | N. Coroa Divina',
-        short_name: 'Escalas',
+        short_name: 'Coroa Divina',
         description: 'Escalas de trabalho do Núcleo Coroa Divina',
         lang: 'pt-BR',
         start_url: '/escalas',

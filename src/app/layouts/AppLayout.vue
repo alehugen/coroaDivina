@@ -47,7 +47,7 @@ async function sair() {
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+  <div class="flex min-h-dvh flex-col pb-(--nav-inferior) md:pb-0">
     <header class="sticky top-0 z-20 border-b bg-card/90 backdrop-blur">
       <div class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
         <RouterLink to="/escalas" class="shrink-0"><AppLogo /></RouterLink>

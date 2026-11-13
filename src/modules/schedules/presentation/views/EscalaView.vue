@@ -126,7 +126,7 @@ async function cancelar(f: FuncaoDoDia, i: Inscricao) {
     <template v-else-if="store.escala">
       <!-- Cabeçalho -->
       <header class="-mt-3 flex flex-col gap-3">
-        <div class="flex items-start justify-between gap-3">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
               <h1 class="text-2xl font-bold">{{ store.escala.titulo }}</h1>
@@ -143,7 +143,7 @@ async function cancelar(f: FuncaoDoDia, i: Inscricao) {
               <PhCrown class="size-4 text-highlight" weight="fill" /> Orgã: {{ store.orgas }}
             </p>
           </div>
-          <div class="flex shrink-0 flex-wrap justify-end gap-2">
+          <div class="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
             <Button as-child variant="outline">
               <RouterLink :to="`/escalas/${store.escala.id}/imprimir`"><PhPrinter /> Imprimir / WhatsApp</RouterLink>
             </Button>

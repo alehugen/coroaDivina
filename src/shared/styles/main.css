@@ -166,4 +166,17 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+  /* Altura da navegação inferior do celular (layout e barras fixas usam a mesma medida) */
+  :root {
+    --nav-inferior: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+  /* iOS dá uma largura mínima própria ao campo de data, que estoura o grid */
+  input[type='date'] {
+    min-width: 0;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type='date']::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }

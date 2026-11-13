@@ -199,7 +199,7 @@ async function criar() {
     </Card>
 
     <div
-      class="sticky bottom-16 -mx-4 flex flex-col gap-3 border-t bg-background/95 px-4 py-4 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:rounded-xl sm:border sm:bg-card md:bottom-0"
+      class="sticky bottom-(--nav-inferior) z-10 -mx-4 flex flex-col gap-3 border-t bg-background/95 px-4 py-4 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:rounded-xl sm:border sm:bg-card md:bottom-0"
     >
       <p class="text-sm text-muted-foreground">
         <strong class="text-foreground">{{ diasSelecionados.size }}</strong> dias ·
