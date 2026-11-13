@@ -6,6 +6,7 @@ import {
   PhCrown,
   PhDotsThreeVertical,
   PhEye,
+  PhPrinter,
   PhPencilSimple,
   PhPlus,
   PhTrash,
@@ -66,7 +67,7 @@ function selecionarPorData(data: string) {
 const MENSAGENS: Partial<Record<string, { titulo: string; mensagem: string }>> = {
   aberta: {
     titulo: 'Abrir inscrições?',
-    mensagem: 'A escala ficará visível para todos os sócios aprovados, que poderão se inscrever nas vagas livres.',
+    mensagem: 'Os sócios poderão se inscrever nas vagas livres.',
   },
   fechada: {
     titulo: 'Encerrar inscrições?',
@@ -74,7 +75,7 @@ const MENSAGENS: Partial<Record<string, { titulo: string; mensagem: string }>> =
   },
   arquivada: {
     titulo: 'Arquivar escala?',
-    mensagem: 'Ela sai das listas dos sócios. Você pode desarquivar depois.',
+    mensagem: 'Ela vai para "Anteriores" e fica só para consulta. Você pode desarquivar depois.',
   },
 }
 
@@ -156,6 +157,9 @@ const modalDia = ref(false)
             <DropdownMenuContent align="end">
               <DropdownMenuItem @select="router.push(`/escalas/${store.escala.id}`)">
                 <PhEye /> Ver como sócio
+              </DropdownMenuItem>
+              <DropdownMenuItem @select="router.push(`/escalas/${store.escala.id}/imprimir`)">
+                <PhPrinter /> Imprimir / WhatsApp
               </DropdownMenuItem>
               <DropdownMenuItem @select="modalEditar = true"><PhPencilSimple /> Editar título e descrição</DropdownMenuItem>
               <DropdownMenuItem @select="modalDuplicar = true"><PhCopy /> Duplicar</DropdownMenuItem>

@@ -10,9 +10,16 @@ export interface ContextoInscricao {
   gestor: boolean
 }
 
-export type MotivoBloqueio = 'escala_fechada' | 'dia_passado' | 'funcao_inativa' | 'lotado' | 'ja_inscrito'
+export type MotivoBloqueio =
+  | 'nao_aberta'
+  | 'escala_fechada'
+  | 'dia_passado'
+  | 'funcao_inativa'
+  | 'lotado'
+  | 'ja_inscrito'
 
 export const MOTIVOS: Record<MotivoBloqueio, string> = {
+  nao_aberta: 'Inscrições ainda não abertas',
   escala_fechada: 'Inscrições encerradas',
   dia_passado: 'Dia já passou',
   funcao_inativa: 'Indisponível',
@@ -44,6 +51,7 @@ export function disponibilidade(
   ctx: ContextoInscricao,
 ): { pode: true } | { pode: false; motivo: MotivoBloqueio } {
   if (!ctx.gestor) {
+    if (ctx.status === 'rascunho') return { pode: false, motivo: 'nao_aberta' }
     if (ctx.status !== 'aberta') return { pode: false, motivo: 'escala_fechada' }
     if (ctx.data < ctx.hoje) return { pode: false, motivo: 'dia_passado' }
     if (!f.ativa) return { pode: false, motivo: 'funcao_inativa' }

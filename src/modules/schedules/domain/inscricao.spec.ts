@@ -58,7 +58,9 @@ describe('disponibilidade', () => {
   })
 
   it('sócio não se inscreve com escala fechada, dia passado ou função inativa', () => {
+    expect(disponibilidade(funcao(), 'auxiliar', ctx({ status: 'rascunho' }))).toMatchObject({ motivo: 'nao_aberta' })
     expect(disponibilidade(funcao(), 'auxiliar', ctx({ status: 'fechada' }))).toMatchObject({ motivo: 'escala_fechada' })
+    expect(disponibilidade(funcao(), 'auxiliar', ctx({ status: 'arquivada' }))).toMatchObject({ motivo: 'escala_fechada' })
     expect(disponibilidade(funcao(), 'auxiliar', ctx({ data: '2026-11-01' }))).toMatchObject({ motivo: 'dia_passado' })
     expect(disponibilidade(funcao({ ativa: false }), 'auxiliar', ctx())).toMatchObject({ motivo: 'funcao_inativa' })
   })

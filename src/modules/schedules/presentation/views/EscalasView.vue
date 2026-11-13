@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Spinner } from '@/components/ui/spinner'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { hojeISO } from '@/shared/lib/datas'
 import { EmptyState } from '@/shared/ui'
 import { escalas } from '../..'
@@ -24,17 +25,35 @@ onMounted(async () => {
   else erro.value = r.error
 })
 
-/** Escalas visíveis para participar: abertas ou encerradas que ainda não terminaram. */
-const visiveis = computed(() =>
-  lista.value
-    .filter((e) => (e.status === 'aberta' || e.status === 'fechada') && e.dataFim >= hoje)
-    .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio)),
+// Todas as escalas são visíveis para todos; o status só limita as ações.
+type Filtro = 'atuais' | 'anteriores'
+const filtro = ref<Filtro>('atuais')
+const ehAnterior = (e: EscalaComResumo) => e.status === 'arquivada' || e.dataFim < hoje
+
+const atuais = computed(() =>
+  lista.value.filter((e) => !ehAnterior(e)).sort((a, b) => a.dataInicio.localeCompare(b.dataInicio)),
 )
+const anteriores = computed(() =>
+  lista.value.filter(ehAnterior).sort((a, b) => b.dataInicio.localeCompare(a.dataInicio)),
+)
+const visiveis = computed(() => (filtro.value === 'atuais' ? atuais.value : anteriores.value))
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-2xl font-bold">Escalas</h1>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h1 class="text-2xl font-bold">Escalas</h1>
+      <Tabs v-model="filtro">
+        <TabsList class="h-9!">
+          <TabsTrigger value="atuais" class="gap-1.5 px-3">
+            Atuais e próximas <span class="text-xs text-muted-foreground tabular-nums">{{ atuais.length }}</span>
+          </TabsTrigger>
+          <TabsTrigger value="anteriores" class="gap-1.5 px-3">
+            Anteriores <span class="text-xs text-muted-foreground tabular-nums">{{ anteriores.length }}</span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
 
     <Alert v-if="erro" variant="destructive">
       <PhWarningCircle />
@@ -48,8 +67,12 @@ const visiveis = computed(() =>
     <EmptyState
       v-else-if="!visiveis.length"
       :icone="PhCalendarBlank"
-      titulo="Nenhuma escala aberta no momento"
-      descricao="Quando a Orgã abrir uma nova escala, ela aparecerá aqui para você escolher suas funções."
+      :titulo="filtro === 'atuais' ? 'Nenhuma escala no momento' : 'Nenhuma escala anterior'"
+      :descricao="
+        filtro === 'atuais'
+          ? 'Quando a Orgã criar uma nova escala, ela aparecerá aqui para você escolher suas funções.'
+          : undefined
+      "
     />
 
     <ul v-else class="grid gap-3 md:grid-cols-2">

@@ -45,6 +45,12 @@ const routes: RouteRecordRaw[] = [
       import('@/modules/identity/presentation/views/AguardandoAprovacaoView.vue'),
   },
 
+  {
+    path: '/escalas/:id/imprimir',
+    component: () => import('@/modules/schedules/presentation/views/EscalaImpressaoView.vue'),
+    props: true,
+  },
+
   // --- app (sócio aprovado)
   {
     path: '/',

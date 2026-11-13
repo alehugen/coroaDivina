@@ -7,6 +7,7 @@ import {
   PhInfo,
   PhLockSimple,
   PhPencilRuler,
+  PhPrinter,
   PhWarningCircle,
 } from '@phosphor-icons/vue'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -137,18 +138,32 @@ async function cancelar(f: FuncaoDoDia, i: Inscricao) {
               <PhCrown class="size-4 text-highlight" weight="fill" /> Orgã: {{ store.orgas }}
             </p>
           </div>
-          <Button v-if="session.gestor" as-child variant="outline" class="shrink-0">
-            <RouterLink :to="`/admin/escalas/${store.escala.id}`"><PhGearSix /> Gerenciar</RouterLink>
-          </Button>
+          <div class="flex shrink-0 flex-wrap justify-end gap-2">
+            <Button as-child variant="outline">
+              <RouterLink :to="`/escalas/${store.escala.id}/imprimir`"><PhPrinter /> Imprimir / WhatsApp</RouterLink>
+            </Button>
+            <Button v-if="session.gestor" as-child variant="outline">
+              <RouterLink :to="`/admin/escalas/${store.escala.id}`"><PhGearSix /> Gerenciar</RouterLink>
+            </Button>
+          </div>
         </div>
         <p v-if="store.escala.descricao" class="text-sm whitespace-pre-line">{{ store.escala.descricao }}</p>
 
         <Alert v-if="store.escala.status === 'rascunho'" class="border-warning/40 bg-warning-soft">
           <PhPencilRuler class="text-warning" />
-          <AlertTitle>Rascunho</AlertTitle>
+          <AlertTitle>Escala em preparação</AlertTitle>
           <AlertDescription class="text-foreground">
-            Só admins e Orgãs veem esta escala. Abra as inscrições em “Gerenciar” quando estiver pronta.
+            <template v-if="session.gestor">
+              Todos já veem esta escala, mas só podem se inscrever depois que você abrir as inscrições em
+              “Gerenciar”.
+            </template>
+            <template v-else>As inscrições ainda não foram abertas. Você poderá escolher suas funções em breve.</template>
           </AlertDescription>
+        </Alert>
+        <Alert v-else-if="store.escala.status === 'arquivada'">
+          <PhLockSimple />
+          <AlertTitle>Escala arquivada</AlertTitle>
+          <AlertDescription>Disponível só para consulta.</AlertDescription>
         </Alert>
         <Alert v-else-if="store.escala.status === 'fechada'">
           <PhLockSimple />

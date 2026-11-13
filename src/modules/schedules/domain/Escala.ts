@@ -75,9 +75,9 @@ export const STATUS_INFO: Record<
   { rotulo: string; tom: 'neutral' | 'primary' | 'accent' | 'warning'; descricao: string }
 > = {
   rascunho: {
-    rotulo: 'Rascunho',
+    rotulo: 'Em preparação',
     tom: 'neutral',
-    descricao: 'Visível só para admins e Orgãs. Monte os dias e funções antes de abrir.',
+    descricao: 'Todos já veem a escala, mas as inscrições ainda não estão abertas. Monte os dias e funções antes de abrir.',
   },
   aberta: {
     rotulo: 'Inscrições abertas',
@@ -92,7 +92,7 @@ export const STATUS_INFO: Record<
   arquivada: {
     rotulo: 'Arquivada',
     tom: 'neutral',
-    descricao: 'Fora das listas. Visível só para admins e Orgãs.',
+    descricao: 'Vai para "Anteriores". Continua visível para consulta, sem inscrições.',
   },
 }
 
