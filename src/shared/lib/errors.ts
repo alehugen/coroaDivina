@@ -23,6 +23,10 @@ const MENSAGENS: Record<string, string> = {
   'duplicate key value': 'Já existe um item com esse nome.',
   ULTIMO_ADMIN: 'Não é possível: o app precisa ter pelo menos um admin ativo.',
   SOCIO_INVALIDO: 'Sócio inválido ou não aprovado.',
+  EXCLUIR_A_SI_MESMO: 'Você não pode excluir a própria conta por aqui.',
+  EXCLUIR_ADMIN: 'Remova o acesso de admin antes de excluir esta conta.',
+  'Failed to send a request to the Edge Function':
+    'O serviço de exclusão não está disponível. Verifique se a função "excluir-conta" foi publicada.',
   // Auth
   'Invalid login credentials': 'E-mail ou senha incorretos.',
   'Email not confirmed': 'Confirme seu e-mail pelo link que enviamos antes de entrar.',

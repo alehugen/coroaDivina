@@ -4,6 +4,7 @@ import {
   PhDotsThreeVertical,
   PhShieldCheck,
   PhShieldSlash,
+  PhTrash,
   PhUserMinus,
   PhWhatsappLogo,
   PhX,
@@ -35,7 +36,9 @@ const props = defineProps<{
 const emit = defineEmits<{ acao: [acao: keyof AcoesSocio] }>()
 
 const whatsapp = computed(() => linkWhatsApp(props.socio.telefone))
-const temMenu = computed(() => props.acoes.tornarAdmin || props.acoes.removerAdmin || props.acoes.desativar)
+const temMenu = computed(
+  () => props.acoes.tornarAdmin || props.acoes.removerAdmin || props.acoes.desativar || props.acoes.excluir,
+)
 </script>
 
 <template>
@@ -67,6 +70,9 @@ const temMenu = computed(() => props.acoes.tornarAdmin || props.acoes.removerAdm
           <span aria-hidden="true">·</span>
           <span>cadastro em {{ formatarData(socio.criadoEm) }}</span>
         </p>
+        <p v-if="socio.exclusaoSolicitadaEm" class="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-destructive">
+          <PhTrash class="size-4" /> Pediu exclusão da conta em {{ formatarData(socio.exclusaoSolicitadaEm) }}
+        </p>
       </div>
     </div>
 
@@ -78,6 +84,14 @@ const temMenu = computed(() => props.acoes.tornarAdmin || props.acoes.removerAdm
         </Button>
         <Button size="lg" variant="outline" :disabled="ocupado" @click="emit('acao', 'rejeitar')">
           <PhX /> Rejeitar
+        </Button>
+      </template>
+      <template v-if="acoes.recusarExclusao">
+        <Button v-if="acoes.excluir" size="lg" variant="destructive" :disabled="ocupado" @click="emit('acao', 'excluir')">
+          <PhTrash /> Aprovar exclusão
+        </Button>
+        <Button size="lg" variant="outline" :disabled="ocupado" @click="emit('acao', 'recusarExclusao')">
+          <PhX /> Recusar
         </Button>
       </template>
       <Button v-if="acoes.reativar" size="lg" variant="outline" :disabled="ocupado" @click="emit('acao', 'reativar')">
@@ -97,12 +111,13 @@ const temMenu = computed(() => props.acoes.tornarAdmin || props.acoes.removerAdm
           <DropdownMenuItem v-if="acoes.removerAdmin" @select="emit('acao', 'removerAdmin')">
             <PhShieldSlash /> Remover admin
           </DropdownMenuItem>
-          <template v-if="acoes.desativar">
-            <DropdownMenuSeparator v-if="acoes.tornarAdmin || acoes.removerAdmin" />
-            <DropdownMenuItem variant="destructive" @select="emit('acao', 'desativar')">
-              <PhUserMinus /> Desativar
-            </DropdownMenuItem>
-          </template>
+          <DropdownMenuSeparator v-if="(acoes.tornarAdmin || acoes.removerAdmin) && (acoes.desativar || acoes.excluir)" />
+          <DropdownMenuItem v-if="acoes.desativar" variant="destructive" @select="emit('acao', 'desativar')">
+            <PhUserMinus /> Desativar
+          </DropdownMenuItem>
+          <DropdownMenuItem v-if="acoes.excluir && !acoes.recusarExclusao" variant="destructive" @select="emit('acao', 'excluir')">
+            <PhTrash /> Excluir permanentemente
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

@@ -1,4 +1,4 @@
-import { traduzErro } from '@/shared/lib/errors'
+import { tentar, traduzErro } from '@/shared/lib/errors'
 import { fail, ok, type Result } from '@/shared/lib/result'
 import {
   SENHA_MIN,
@@ -61,6 +61,10 @@ export function criarUseCasesIdentidade(repo: AuthRepository) {
         return fail({ geral: traduzErro(e) })
       }
     },
+
+    definirLembretes: (id: string, receber: boolean) => tentar(() => repo.definirLembretes(id, receber)),
+    solicitarExclusao: () => tentar(() => repo.solicitarExclusao()),
+    cancelarSolicitacaoExclusao: () => tentar(() => repo.cancelarSolicitacaoExclusao()),
 
     async redefinirSenha(senha: string, confirmacao: string): Promise<Result<void>> {
       if (senha.length < SENHA_MIN)

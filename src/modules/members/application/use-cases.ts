@@ -19,6 +19,8 @@ export function criarUseCasesMembros(repo: MembersRepository) {
     reativar: (id: string) => tentar(() => repo.alterarStatus(id, 'aprovado')),
     tornarAdmin: (id: string) => tentar(() => repo.alterarRole(id, 'admin')),
     removerAdmin: (id: string) => tentar(() => repo.alterarRole(id, 'socio')),
+    excluir: (id: string) => tentar(() => repo.excluirConta(id)),
+    recusarExclusao: (id: string) => tentar(() => repo.recusarExclusao(id)),
 
     listarMandatos: () => tentar(() => repo.listarMandatos()),
 

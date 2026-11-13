@@ -87,6 +87,21 @@ host/usuário/senha nos dois lugares abaixo.
    (Edge Functions bloqueiam as portas 25/587; a função usa 465.)
 4. *Database → Webhooks → Create*: tabela `notificacoes`, evento **Insert**, tipo
    *Supabase Edge Function* → `enviar-notificacao`, header `x-webhook-secret: <mesma string>`.
+5. **Exclusão permanente de contas** (o sócio pede em "Meu perfil", o admin aprova em Sócios):
+   ```bash
+   npx supabase functions deploy excluir-conta
+   ```
+   (com verificação de JWT — a função confere que quem chama é admin.)
+6. **Lembretes na véspera**: a migration `..._lembretes_e_exclusao.sql` agenda no **pg_cron** o job
+   `lembretes-vespera` (todo dia 21:00 UTC = 18:00 de Brasília), que gera uma notificação por pessoa
+   escalada no dia seguinte; o webhook acima envia o e-mail. Conferir em *Integrations → Cron*.
+   Teste manual no SQL Editor: `select public.gerar_lembretes('2026-11-20');`
+
+### App no celular (PWA)
+
+O app é instalável (ícone na tela inicial, abre em tela cheia). Android/Chrome mostram o convite
+"Instalar"; no iPhone o app ensina o caminho Safari → Compartilhar → Adicionar à Tela de Início.
+Ícones gerados a partir de `public/icon.svg` com `npm run icons`.
 
 ### 3. Templates de e-mail do Auth (português)
 

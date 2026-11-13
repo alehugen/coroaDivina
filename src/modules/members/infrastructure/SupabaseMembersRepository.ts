@@ -12,6 +12,7 @@ interface ProfileRow {
   status: Socio['status']
   created_at: string
   aprovado_em: string | null
+  exclusao_solicitada_em: string | null
 }
 
 interface MandatoRow {
@@ -31,7 +32,7 @@ export const supabaseMembersRepository: MembersRepository = {
   async listarSocios() {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, nome, email, telefone, role, status, created_at, aprovado_em')
+      .select('id, nome, email, telefone, role, status, created_at, aprovado_em, exclusao_solicitada_em')
       .order('nome')
       .returns<ProfileRow[]>()
     if (error) throw error
@@ -44,6 +45,7 @@ export const supabaseMembersRepository: MembersRepository = {
       status: r.status,
       criadoEm: r.created_at,
       aprovadoEm: r.aprovado_em,
+      exclusaoSolicitadaEm: r.exclusao_solicitada_em,
     }))
   },
 
@@ -57,6 +59,26 @@ export const supabaseMembersRepository: MembersRepository = {
     const { data, error } = await supabase.from('profiles').update({ role }).eq('id', id).select('id')
     if (error) throw error
     exigirLinha(data)
+  },
+
+  async excluirConta(id) {
+    const { error } = await supabase.functions.invoke('excluir-conta', { body: { profileId: id } })
+    if (error) {
+      // Erros HTTP da função trazem { error: 'CODIGO' } no corpo
+      let mensagem = error.message
+      try {
+        const corpo = await (error as { context?: Response }).context?.json()
+        if (corpo?.error) mensagem = corpo.error
+      } catch {
+        /* corpo não é JSON */
+      }
+      throw new Error(mensagem)
+    }
+  },
+
+  async recusarExclusao(id) {
+    const { error } = await supabase.rpc('cancelar_solicitacao_exclusao', { p_profile_id: id })
+    if (error) throw error
   },
 
   async listarMandatos() {

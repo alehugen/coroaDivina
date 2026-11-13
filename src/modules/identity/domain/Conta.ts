@@ -11,6 +11,10 @@ export interface Conta {
   status: StatusCadastro
   /** Tem mandato de Orgã vigente hoje */
   isOrga: boolean
+  /** Recebe e-mail de lembrete na véspera */
+  receberLembretes: boolean
+  /** Pediu exclusão da conta (aguardando admin) */
+  exclusaoSolicitadaEm: string | null
 }
 
 export const isAprovado = (c: Conta | null): c is Conta => c?.status === 'aprovado'

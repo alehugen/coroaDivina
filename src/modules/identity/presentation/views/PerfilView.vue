@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhWarningCircle } from '@phosphor-icons/vue'
+import { PhHourglassMedium, PhTrash, PhWarningCircle } from '@phosphor-icons/vue'
 import { reactive, ref, watch } from 'vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -7,7 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
+import { Switch } from '@/components/ui/switch'
+import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
+import { formatarData } from '@/shared/lib/datas'
 import { FormInput } from '@/shared/ui'
 import { identidade } from '../..'
 import { SENHA_MIN, type ErrosPerfil } from '../../domain/Cadastro'
@@ -61,6 +64,44 @@ async function salvarSenha() {
   senha.nova = ''
   senha.confirmacao = ''
   toast('Senha alterada.')
+}
+
+// --- lembretes
+async function alternarLembretes(receber: boolean) {
+  if (!session.conta) return
+  const r = await identidade.definirLembretes(session.conta.id, receber)
+  if (!r.ok) return toast(r.error, 'danger')
+  await session.recarregar()
+  toast(receber ? 'Você vai receber lembretes na véspera.' : 'Lembretes desligados.')
+}
+
+// --- exclusão
+const processandoExclusao = ref(false)
+
+async function pedirExclusao() {
+  const ok = await confirmar({
+    titulo: 'Pedir a exclusão da sua conta?',
+    mensagem:
+      'Um administrador vai analisar o pedido. Se aprovado, sua conta e suas inscrições serão apagadas de vez. Até lá, você continua usando o app normalmente.',
+    confirmar: 'Pedir exclusão',
+    tom: 'danger',
+  })
+  if (!ok) return
+  processandoExclusao.value = true
+  const r = await identidade.solicitarExclusao()
+  processandoExclusao.value = false
+  if (!r.ok) return toast(r.error, 'danger')
+  await session.recarregar()
+  toast('Pedido enviado aos administradores.')
+}
+
+async function desistirExclusao() {
+  processandoExclusao.value = true
+  const r = await identidade.cancelarSolicitacaoExclusao()
+  processandoExclusao.value = false
+  if (!r.ok) return toast(r.error, 'danger')
+  await session.recarregar()
+  toast('Pedido de exclusão cancelado.')
 }
 </script>
 
@@ -137,6 +178,59 @@ async function salvarSenha() {
             </Button>
           </FieldGroup>
         </form>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>Lembretes</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Field orientation="horizontal">
+          <Switch
+            id="perfil-lembretes"
+            :model-value="session.conta?.receberLembretes ?? true"
+            @update:model-value="alternarLembretes"
+          />
+          <FieldLabel for="perfil-lembretes" class="flex-col items-start gap-0.5 font-normal">
+            <span class="font-medium">Receber lembrete por e-mail na véspera</span>
+            <span class="text-sm text-muted-foreground">Às 18h do dia anterior, com as funções que você vai fazer.</span>
+          </FieldLabel>
+        </Field>
+      </CardContent>
+    </Card>
+
+    <Card class="ring-destructive/30">
+      <CardHeader>
+        <CardTitle class="text-destructive">Excluir minha conta</CardTitle>
+        <CardDescription>
+          A exclusão é permanente e precisa da aprovação de um administrador. Suas inscrições também serão apagadas.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Alert v-if="session.conta?.exclusaoSolicitadaEm" class="border-warning/40 bg-warning-soft">
+          <PhHourglassMedium class="text-warning" />
+          <AlertDescription class="text-foreground">
+            Pedido enviado em {{ formatarData(session.conta.exclusaoSolicitadaEm) }}. Aguardando um administrador.
+          </AlertDescription>
+        </Alert>
+        <div class="mt-4 flex">
+          <Button
+            v-if="session.conta?.exclusaoSolicitadaEm"
+            variant="outline"
+            size="lg"
+            :disabled="processandoExclusao"
+            @click="desistirExclusao"
+          >
+            <Spinner v-if="processandoExclusao" />
+            Desistir do pedido
+          </Button>
+          <Button v-else variant="destructive" size="lg" :disabled="processandoExclusao" @click="pedirExclusao">
+            <Spinner v-if="processandoExclusao" />
+            <PhTrash v-else />
+            Pedir exclusão da conta
+          </Button>
+        </div>
       </CardContent>
     </Card>
   </div>

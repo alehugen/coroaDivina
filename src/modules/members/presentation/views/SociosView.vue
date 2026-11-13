@@ -29,13 +29,16 @@ const ocupado = ref<string | null>(null)
 
 onMounted(async () => {
   await Promise.all([store.carregarSocios(), store.carregarMandatos()])
-  if (!store.contagem.pendente) grupo.value = 'aprovado'
+  grupo.value = store.contagem.exclusao ? 'exclusao' : store.contagem.pendente ? 'pendente' : 'aprovado'
 })
 
 watch(grupo, () => (busca.value = ''))
 
 // Cadastro não exige mais aprovação: "Pendentes" só aparece se sobrou alguém de antes.
 const opcoes = computed(() => [
+  ...(store.contagem.exclusao
+    ? [{ value: 'exclusao' as const, label: 'Pedidos de exclusão', contador: store.contagem.exclusao }]
+    : []),
   ...(store.contagem.pendente
     ? [{ value: 'pendente' as const, label: 'Pendentes', contador: store.contagem.pendente }]
     : []),
@@ -84,6 +87,24 @@ const ACOES: Record<keyof AcoesSocio, { confirmacao?: (s: Socio) => ConfirmOpcoe
     }),
     sucesso: (s) => `${s.nome} não é mais admin.`,
   },
+  excluir: {
+    confirmacao: (s) => ({
+      titulo: `Excluir ${s.nome} permanentemente?`,
+      mensagem:
+        'A conta, o login e todas as inscrições dessa pessoa serão apagados de vez. Essa ação NÃO pode ser desfeita. Se quiser só bloquear o acesso, use "Desativar".',
+      confirmar: 'Excluir permanentemente',
+      tom: 'danger',
+    }),
+    sucesso: (s) => `A conta de ${s.nome} foi excluída.`,
+  },
+  recusarExclusao: {
+    confirmacao: (s) => ({
+      titulo: `Recusar o pedido de exclusão de ${s.nome}?`,
+      mensagem: 'A conta continua ativa. A pessoa pode pedir de novo depois.',
+      confirmar: 'Recusar pedido',
+    }),
+    sucesso: (s) => `Pedido de ${s.nome} recusado.`,
+  },
 }
 
 async function executar(acao: keyof AcoesSocio, s: Socio) {
@@ -105,6 +126,7 @@ const TITULOS_VAZIO: Record<GrupoStatus, string> = {
   pendente: 'Nenhum cadastro aguardando aprovação',
   aprovado: 'Nenhum sócio cadastrado',
   inativo: 'Nenhum sócio inativo',
+  exclusao: 'Nenhum pedido de exclusão',
 }
 </script>
 

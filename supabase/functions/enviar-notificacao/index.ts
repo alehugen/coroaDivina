@@ -15,11 +15,18 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import nodemailer from 'npm:nodemailer@6'
 
+type ItemLembrete = { funcao: string; papel: string; area: string; escala: string; escala_id: string }
+
 type Notificacao = {
   id: string
-  tipo: 'novo_cadastro' | 'cadastro_aprovado' | 'cancelamento'
-  payload: Record<string, string>
+  tipo: 'novo_cadastro' | 'cadastro_aprovado' | 'cancelamento' | 'lembrete' | 'exclusao_solicitada'
+  // deno-lint-ignore no-explicit-any
+  payload: Record<string, any>
 }
+
+const DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado']
+const diaDaSemana = (iso: string) => DIAS[new Date(`${iso}T12:00:00`).getDay()]
+const rotuloPapel = (p: string) => (p === 'responsavel' ? 'Responsável' : 'Auxiliar')
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -117,6 +124,39 @@ async function montar(n: Notificacao): Promise<{ to: string[]; subject: string; 
         ),
       }
     }
+    case 'lembrete': {
+      const itens = p.itens as ItemLembrete[]
+      const linhas = itens
+        .map(
+          (i) => `<li style="margin-bottom:6px"><strong>${esc(i.funcao)}</strong> — ${rotuloPapel(i.papel)}
+                  <br><span style="color:#5a6b5d;font-size:13px">${esc(i.area)} · ${esc(i.escala)}</span></li>`,
+        )
+        .join('')
+      return {
+        to: [p.email],
+        subject: `Lembrete: amanhã (${diaDaSemana(p.data)}, ${dataBR(p.data).slice(0, 5)}) você está na escala`,
+        html: layout(
+          `Olá, ${esc(String(p.nome).split(' ')[0])}!`,
+          `<p>Passando para lembrar que <strong>amanhã, ${diaDaSemana(p.data)} (${dataBR(p.data)})</strong>, você está escalado(a) em:</p>
+           <ul style="padding-left:20px">${linhas}</ul>
+           <p><a href="${APP_URL}/escalas/${esc(itens[0]?.escala_id)}?dia=${esc(p.data)}"
+                 style="display:inline-block;background:#007f5f;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">
+                 Ver a escala</a></p>
+           <p style="color:#5a6b5d;font-size:13px">Não vai conseguir? Entre no app e saia da função para liberar a vaga.
+              Para não receber lembretes, desligue em “Meu perfil”.</p>`,
+        ),
+      }
+    }
+    case 'exclusao_solicitada':
+      return {
+        to: await emailsAdmins(),
+        subject: `Pedido de exclusão de conta: ${p.nome}`,
+        html: layout(
+          'Pedido de exclusão de conta',
+          `<p><strong>${esc(p.nome)}</strong> (${esc(p.email)}) pediu para excluir a conta permanentemente.</p>
+           <p>Aprove ou recuse em <a href="${APP_URL}/admin/socios">Administração → Sócios</a>.</p>`,
+        ),
+      }
   }
 }
 

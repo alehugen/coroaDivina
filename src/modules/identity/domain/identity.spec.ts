@@ -85,6 +85,8 @@ describe('permissões', () => {
     role: 'socio',
     status: 'aprovado',
     isOrga: false,
+    receberLembretes: true,
+    exclusaoSolicitadaEm: null,
   }
   it('sócio comum não é gestor', () => expect(isGestor(conta)).toBe(false))
   it('Orgã vigente é gestor, mas não admin', () => {

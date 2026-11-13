@@ -10,6 +10,8 @@ interface ContaRow {
   role: Conta['role']
   status: Conta['status']
   is_orga: boolean
+  receber_lembretes: boolean
+  exclusao_solicitada_em: string | null
 }
 
 const toConta = (r: ContaRow): Conta => ({
@@ -20,6 +22,8 @@ const toConta = (r: ContaRow): Conta => ({
   role: r.role,
   status: r.status,
   isOrga: r.is_orga,
+  receberLembretes: r.receber_lembretes ?? true,
+  exclusaoSolicitadaEm: r.exclusao_solicitada_em ?? null,
 })
 
 export const supabaseAuthRepository: AuthRepository = {
@@ -72,6 +76,26 @@ export const supabaseAuthRepository: AuthRepository = {
     if (!data?.length) throw new Error('SEM_PERMISSAO')
     // Mantém o metadata do Auth coerente (nome aparece em e-mails/painel do Supabase)
     await supabase.auth.updateUser({ data: { nome, telefone } })
+  },
+
+  async definirLembretes(id, receber) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ receber_lembretes: receber })
+      .eq('id', id)
+      .select('id')
+    if (error) throw error
+    if (!data?.length) throw new Error('SEM_PERMISSAO')
+  },
+
+  async solicitarExclusao() {
+    const { error } = await supabase.rpc('solicitar_exclusao')
+    if (error) throw error
+  },
+
+  async cancelarSolicitacaoExclusao() {
+    const { error } = await supabase.rpc('cancelar_solicitacao_exclusao')
+    if (error) throw error
   },
 
   aoMudarSessao(cb) {

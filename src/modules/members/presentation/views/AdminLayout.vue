@@ -11,7 +11,7 @@ const abas = computed(() =>
   [
     { to: '/admin/escalas', label: 'Escalas', icone: PhCalendarDots, visivel: true },
     { to: '/admin/funcoes', label: 'Funções', icone: PhListChecks, visivel: true },
-    { to: '/admin/socios', label: 'Sócios', icone: PhUsers, contador: store.contagem.pendente, visivel: session.admin },
+    { to: '/admin/socios', label: 'Sócios', icone: PhUsers, contador: store.contagem.pendente + store.contagem.exclusao, visivel: session.admin },
     { to: '/admin/orgas', label: 'Orgãs', icone: PhCrown, visivel: session.admin },
   ].filter((a) => a.visivel),
 )
