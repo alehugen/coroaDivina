@@ -7,6 +7,8 @@ const session = useSessionStore()
 const store = useMembersStore()
 
 const abas = computed(() => [
+  { to: '/admin/escalas', label: 'Escalas', visivel: true },
+  { to: '/admin/funcoes', label: 'Funções', visivel: true },
   { to: '/admin/socios', label: 'Sócios', contador: store.contagem.pendente, visivel: session.admin },
   { to: '/admin/orgas', label: 'Orgãs', visivel: session.admin },
 ])

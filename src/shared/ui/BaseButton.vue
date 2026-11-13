@@ -10,6 +10,8 @@ const props = withDefaults(
     loading?: boolean
     disabled?: boolean
     block?: boolean
+    /** Quando informado, renderiza como link do router com o visual de botão. */
+    to?: string
   }>(),
   { variant: 'primary', size: 'md', type: 'button' },
 )
@@ -33,7 +35,10 @@ const classes = computed(() => [
 </script>
 
 <template>
-  <button :type="type" :class="classes" :disabled="disabled || loading">
+  <RouterLink v-if="to" :to="to" :class="classes">
+    <slot />
+  </RouterLink>
+  <button v-else :type="type" :class="classes" :disabled="disabled || loading">
     <BaseSpinner v-if="loading" class="size-4" />
     <slot />
   </button>

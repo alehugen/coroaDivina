@@ -1,0 +1,37 @@
+import type { DataISO } from '@/shared/lib/datas'
+import type {
+  EscalaComResumo,
+  EscalaDetalhada,
+  FuncaoDoDia,
+  NovaEscala,
+  NovaFuncaoDia,
+  StatusEscala,
+} from '../../domain/Escala'
+
+export type PatchFuncaoDia = Partial<Pick<FuncaoDoDia, 'vagasResp' | 'vagasAux' | 'ativa' | 'nome'>>
+
+export interface MandatoRef {
+  nome: string
+  inicio: DataISO
+  fim: DataISO
+}
+
+export interface EscalasRepository {
+  listar(): Promise<EscalaComResumo[]>
+  obter(id: string): Promise<EscalaDetalhada | null>
+  listarOrgas(): Promise<MandatoRef[]>
+
+  criar(dados: NovaEscala): Promise<string>
+  duplicar(origemId: string, titulo: string, novoInicio: DataISO): Promise<string>
+  atualizar(id: string, dados: { titulo: string; descricao: string | null }): Promise<void>
+  alterarStatus(id: string, status: StatusEscala): Promise<void>
+  excluir(id: string): Promise<void>
+
+  adicionarDia(escalaId: string, data: DataISO, funcaoModeloIds: string[]): Promise<void>
+  removerDia(diaId: string): Promise<void>
+  salvarObservacoes(diaId: string, texto: string): Promise<void>
+
+  adicionarFuncao(diaId: string, dados: NovaFuncaoDia & { ordem: number }): Promise<void>
+  atualizarFuncao(id: string, patch: PatchFuncaoDia): Promise<void>
+  removerFuncao(id: string): Promise<void>
+}

@@ -63,9 +63,26 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/modules/members/presentation/views/AdminLayout.vue'),
         meta: { gestor: true },
         children: [
+          { path: '', redirect: '/admin/escalas' },
           {
-            path: '',
-            redirect: () => (useSessionStore().admin ? '/admin/socios' : '/escalas'),
+            path: 'escalas',
+            component: () =>
+              import('@/modules/schedules/presentation/views/admin/EscalasAdminView.vue'),
+          },
+          {
+            path: 'escalas/nova',
+            component: () =>
+              import('@/modules/schedules/presentation/views/admin/NovaEscalaView.vue'),
+          },
+          {
+            path: 'escalas/:id',
+            component: () =>
+              import('@/modules/schedules/presentation/views/admin/EscalaEditorView.vue'),
+            props: true,
+          },
+          {
+            path: 'funcoes',
+            component: () => import('@/modules/catalog/presentation/views/FuncoesView.vue'),
           },
           {
             path: 'socios',
