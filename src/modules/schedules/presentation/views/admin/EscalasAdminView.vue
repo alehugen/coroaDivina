@@ -61,7 +61,7 @@ function duplicar(e: Escala) {
   <section class="flex flex-col gap-5">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <Tabs v-model="filtro" class="max-w-full overflow-x-auto">
-        <TabsList class="h-9!">
+        <TabsList class="h-11!">
           <TabsTrigger v-for="o in opcoes" :key="o.value" :value="o.value" class="gap-1.5 px-3">
             {{ o.label }}
             <span class="text-xs text-muted-foreground tabular-nums">{{ o.contador }}</span>

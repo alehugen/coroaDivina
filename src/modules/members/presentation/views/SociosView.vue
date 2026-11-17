@@ -22,14 +22,20 @@ import { useMembersStore } from '../stores/members'
 const session = useSessionStore()
 const store = useMembersStore()
 
-const grupo = ref<GrupoStatus>('pendente')
+const grupo = ref<GrupoStatus>('aprovado')
 const busca = ref('')
 const ocupado = ref<string | null>(null)
 
+// Abre nos pedidos de exclusão quando há algum — só se a pessoa ainda não trocou de aba
+let grupoEscolhido = false
 onMounted(async () => {
   await Promise.all([store.carregarSocios(), store.carregarMandatos()])
-  grupo.value = store.contagem.exclusao ? 'exclusao' : store.contagem.pendente ? 'pendente' : 'aprovado'
+  if (!grupoEscolhido && session.admin && store.contagem.exclusao) grupo.value = 'exclusao'
 })
+function escolherGrupo(g: GrupoStatus) {
+  grupoEscolhido = true
+  grupo.value = g
+}
 
 watch(grupo, () => (busca.value = ''))
 
@@ -37,9 +43,6 @@ watch(grupo, () => (busca.value = ''))
 const opcoes = computed(() => [
   ...(store.contagem.exclusao
     ? [{ value: 'exclusao' as const, label: 'Pedidos de exclusão', contador: store.contagem.exclusao }]
-    : []),
-  ...(store.contagem.pendente
-    ? [{ value: 'pendente' as const, label: 'Pendentes', contador: store.contagem.pendente }]
     : []),
   { value: 'aprovado' as const, label: 'Ativos', contador: store.contagem.aprovado },
   { value: 'inativo' as const, label: 'Inativos', contador: store.contagem.inativo },
@@ -50,8 +53,6 @@ const meuId = computed(() => session.conta?.id ?? '')
 
 // QM (sem ser admin) só define o grau; as demais ações são do admin
 const SEM_ACOES: AcoesSocio = {
-  aprovar: false,
-  rejeitar: false,
   desativar: false,
   reativar: false,
   tornarAdmin: false,
@@ -74,17 +75,7 @@ async function alterarGrau(s: Socio, grau: Grau) {
 }
 
 const ACOES: Record<keyof AcoesSocio, { confirmacao?: (s: Socio) => ConfirmOpcoes; sucesso: (s: Socio) => string }> = {
-  aprovar: { sucesso: (s) => `${s.nome} foi aprovado(a) e receberá um e-mail.` },
   reativar: { sucesso: (s) => `${s.nome} foi reativado(a).` },
-  rejeitar: {
-    confirmacao: (s) => ({
-      titulo: `Rejeitar o cadastro de ${s.nome}?`,
-      mensagem: 'A pessoa não terá acesso ao app. Você pode reativar depois, se necessário.',
-      confirmar: 'Rejeitar',
-      tom: 'danger',
-    }),
-    sucesso: (s) => `Cadastro de ${s.nome} rejeitado.`,
-  },
   desativar: {
     confirmacao: (s) => ({
       titulo: `Desativar ${s.nome}?`,
@@ -97,7 +88,7 @@ const ACOES: Record<keyof AcoesSocio, { confirmacao?: (s: Socio) => ConfirmOpcoe
   tornarAdmin: {
     confirmacao: (s) => ({
       titulo: `Tornar ${s.nome} admin?`,
-      mensagem: 'Admins podem aprovar sócios, alterar permissões, definir Orgãs e gerenciar todas as escalas.',
+      mensagem: 'Admins podem alterar permissões, desativar sócios, definir Orgãs e gerenciar todas as escalas.',
       confirmar: 'Tornar admin',
     }),
     sucesso: (s) => `${s.nome} agora é admin.`,
@@ -147,7 +138,6 @@ async function executar(acao: keyof AcoesSocio, s: Socio) {
 }
 
 const TITULOS_VAZIO: Record<GrupoStatus, string> = {
-  pendente: 'Nenhum cadastro aguardando aprovação',
   aprovado: 'Nenhum sócio cadastrado',
   inativo: 'Nenhum sócio inativo',
   exclusao: 'Nenhum pedido de exclusão',
@@ -157,8 +147,8 @@ const TITULOS_VAZIO: Record<GrupoStatus, string> = {
 <template>
   <section class="flex flex-col gap-4">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <Tabs v-model="grupo">
-        <TabsList class="h-9!">
+      <Tabs :model-value="grupo" class="max-w-full overflow-x-auto" @update:model-value="escolherGrupo($event as GrupoStatus)">
+        <TabsList class="h-11!">
           <TabsTrigger v-for="o in opcoes" :key="o.value" :value="o.value" class="gap-1.5 px-3">
             {{ o.label }}
             <span class="text-xs text-muted-foreground tabular-nums">{{ o.contador }}</span>

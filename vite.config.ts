@@ -14,6 +14,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
+        id: '/',
         name: 'Escalas | N. Coroa Divina',
         short_name: 'Coroa Divina',
         description: 'Escalas de trabalho do Núcleo Coroa Divina',

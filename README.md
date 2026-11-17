@@ -115,6 +115,11 @@ O app é instalável (ícone na tela inicial, abre em tela cheia). Android/Chrom
 "Instalar"; no iPhone o app ensina o caminho Safari → Compartilhar → Adicionar à Tela de Início.
 Ícones gerados a partir de `public/icon.svg` com `npm run icons`.
 
+Atualizações (`src/app/pwa.ts`): o app procura versão nova ao voltar para a tela e a cada hora, e
+recarrega sozinho quando há deploy novo. Se uma tela antiga pedir um arquivo que já não existe
+(depois de um deploy), recarrega direto na rota. Só o "casco" do app fica em cache; dados vêm sempre
+do Supabase. Sair da conta recarrega o app para não sobrar dado de outra pessoa no aparelho.
+
 ### 3. Templates de e-mail do Auth (português)
 
 Em *Authentication → Emails → Templates*, cole o HTML de `supabase/templates/` e ajuste o assunto:

@@ -20,21 +20,21 @@ const destino = computed(() => ({ path: `/escalas/${props.itens[0]!.escalaId}`, 
 <template>
   <RouterLink
     :to="destino"
-    class="relative grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 overflow-hidden rounded-2xl bg-[#007f5f] p-4 text-white shadow-sm outline-offset-4 transition-transform active:scale-[0.99] motion-reduce:transition-none sm:p-5"
+    class="relative grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 overflow-hidden rounded-2xl bg-brand-900 p-4 text-white shadow-sm outline-offset-4 transition-transform active:scale-[0.99] motion-reduce:transition-none sm:p-5"
     :aria-label="`Próximo compromisso: ${rotuloQuando(data, hoje)}. Abrir a escala`"
   >
     <span class="row-span-2 flex w-16 flex-col items-center justify-center rounded-xl bg-white/12 py-1.5">
       <span class="text-3xl leading-none font-extrabold tabular-nums">{{ dia }}</span>
       <span class="text-xs opacity-85">{{ mes }}</span>
     </span>
-    <span class="self-end text-sm font-semibold text-[#ffff3f]">{{ rotuloQuando(data, hoje) }}</span>
+    <span class="self-end text-sm font-semibold text-brand-50">{{ rotuloQuando(data, hoje) }}</span>
     <span class="self-start text-lg leading-snug font-semibold">{{ escalas.join(' e ') }}</span>
 
     <ul class="col-span-2 mt-2 grid gap-1.5 border-t border-white/20 pt-3 text-[0.95rem]">
       <li v-for="i in itens" :key="i.id" class="flex items-center justify-between gap-3">
         <strong class="font-semibold">{{ i.funcao }}</strong>
         <span class="inline-flex items-center gap-1 opacity-85">
-          <PhStar v-if="i.papel === 'responsavel'" weight="fill" class="size-3.5 text-[#ffff3f]" />
+          <PhStar v-if="i.papel === 'responsavel'" weight="fill" class="size-3.5 text-brand-50" />
           {{ ROTULO_PAPEL[i.papel] }}
         </span>
       </li>

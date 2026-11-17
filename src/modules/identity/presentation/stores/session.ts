@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { isAdmin, isAprovado, isGestor, podeDefinirGrau, podeEditarAgenda, type Conta } from '../../domain/Conta'
-import { supabaseAuthRepository as repo } from '../../infrastructure/SupabaseAuthRepository'
+import { authRepository as repo } from '../..'
 
 export const useSessionStore = defineStore('session', () => {
   const conta = ref<Conta | null>(null)
@@ -42,9 +42,14 @@ export const useSessionStore = defineStore('session', () => {
     return inicializacao
   }
 
-  async function sair() {
+  /**
+   * Sai e recarrega o app no login: zera de uma vez todas as stores (sócios, agenda, escalas...),
+   * para que outra pessoa entrando no mesmo aparelho não veja dados da anterior.
+   */
+  async function sair({ recarregar = true } = {}) {
     await repo.sair()
     conta.value = null
+    if (recarregar) window.location.replace('/entrar')
   }
 
   return { conta, carregado, logado, aprovado, admin, gestor, editaAgenda, defineGrau, painel, init, recarregar, sair }

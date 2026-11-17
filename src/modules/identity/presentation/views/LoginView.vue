@@ -33,7 +33,7 @@ async function entrar() {
   carregando.value = false
   // Login válido mas sem cadastro no app (ex.: conta excluída): não deixa preso no login
   if (!session.logado) {
-    await session.sair()
+    await session.sair({ recarregar: false })
     erro.value = 'Não encontramos seu cadastro. Faça um novo cadastro ou fale com a administração.'
     return
   }

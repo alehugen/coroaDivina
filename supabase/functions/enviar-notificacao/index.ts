@@ -74,12 +74,13 @@ async function emailsAdmins(): Promise<string[]> {
 async function emailsOrgas(dataRef: string): Promise<string[]> {
   const { data } = await supabase
     .from('orga_mandatos')
-    .select('profiles!inner(email, status)')
+    .select('profiles!inner(email, status, grau)')
     .lte('inicio', dataRef)
     .gte('fim', dataRef)
+  // Só a Orgã que de fato gerencia (CDC/QM) recebe; senão, os admins
   const emails = (data ?? [])
-    .map((m) => (m.profiles as unknown as { email: string; status: string }))
-    .filter((p) => p.status === 'aprovado')
+    .map((m) => (m.profiles as unknown as { email: string; status: string; grau: string }))
+    .filter((p) => p.status === 'aprovado' && (p.grau === 'CDC' || p.grau === 'QM'))
     .map((p) => p.email)
   return emails.length ? emails : emailsAdmins()
 }

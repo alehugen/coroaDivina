@@ -11,7 +11,7 @@ const MENSAGENS: Record<string, string> = {
   ESCALA_FECHADA: 'Essa escala não está aberta para inscrições.',
   FUNCAO_INATIVA: 'Essa função não está disponível neste dia.',
   DATA_PASSADA: 'Não é possível alterar inscrições de dias que já passaram.',
-  NAO_APROVADO: 'Seu cadastro ainda não foi aprovado.',
+  NAO_APROVADO: 'Seu acesso não está ativo. Procure a administração do núcleo.',
   SEM_PERMISSAO: 'Você não tem permissão para essa ação.',
   VAGAS_MENOR_QUE_INSCRITOS: 'Já há mais inscritos do que esse número de vagas. Remova inscrições antes.',
   ESCALA_SEM_DIAS: 'A escala precisa ter pelo menos um dia.',

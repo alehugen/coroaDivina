@@ -106,7 +106,7 @@ describe('permissões', () => {
     expect(podeEditarAgenda({ ...conta, role: 'admin' })).toBe(true)
     expect(podeEditarAgenda({ ...conta, grau: 'QM', status: 'inativo' })).toBe(false)
   })
-  it('admin pendente não tem poderes', () => {
-    expect(isAdmin({ ...conta, role: 'admin', status: 'pendente' })).toBe(false)
+  it('admin inativo não tem poderes', () => {
+    expect(isAdmin({ ...conta, role: 'admin', status: 'inativo' })).toBe(false)
   })
 })

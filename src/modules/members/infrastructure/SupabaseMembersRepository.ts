@@ -1,4 +1,4 @@
-import { supabase } from '@/shared/lib/supabase'
+import { exigir, supabase } from '@/shared/lib/supabase'
 import type { MembersRepository } from '../application/ports/MembersRepository'
 import type { Mandato } from '../domain/Mandato'
 import type { Socio } from '../domain/Socio'
@@ -24,11 +24,6 @@ interface MandatoRow {
   profiles: { nome: string } | null
 }
 
-/** Garante que a operação realmente afetou uma linha (RLS bloqueia em silêncio). */
-function exigirLinha<T>(data: T[] | null) {
-  if (!data?.length) throw new Error('SEM_PERMISSAO')
-}
-
 export const supabaseMembersRepository: MembersRepository = {
   async listarSocios() {
     const { data, error } = await supabase
@@ -52,15 +47,11 @@ export const supabaseMembersRepository: MembersRepository = {
   },
 
   async alterarStatus(id, status) {
-    const { data, error } = await supabase.from('profiles').update({ status }).eq('id', id).select('id')
-    if (error) throw error
-    exigirLinha(data)
+    await exigir(supabase.from('profiles').update({ status }).eq('id', id).select('id'))
   },
 
   async alterarRole(id, role) {
-    const { data, error } = await supabase.from('profiles').update({ role }).eq('id', id).select('id')
-    if (error) throw error
-    exigirLinha(data)
+    await exigir(supabase.from('profiles').update({ role }).eq('id', id).select('id'))
   },
 
   async definirGrau(id, grau) {
@@ -114,14 +105,10 @@ export const supabaseMembersRepository: MembersRepository = {
   },
 
   async alterarFimMandato(id, fim) {
-    const { data, error } = await supabase.from('orga_mandatos').update({ fim }).eq('id', id).select('id')
-    if (error) throw error
-    exigirLinha(data)
+    await exigir(supabase.from('orga_mandatos').update({ fim }).eq('id', id).select('id'))
   },
 
   async removerMandato(id) {
-    const { data, error } = await supabase.from('orga_mandatos').delete().eq('id', id).select('id')
-    if (error) throw error
-    exigirLinha(data)
+    await exigir(supabase.from('orga_mandatos').delete().eq('id', id).select('id'))
   },
 }

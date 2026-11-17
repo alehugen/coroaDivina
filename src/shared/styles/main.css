@@ -54,6 +54,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
+  --color-evento-amarelo: var(--evento-amarelo);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -95,8 +96,9 @@
   --highlight: #aacc00;
   --highlight-foreground: #16201a;
   --success: #2b9348;
-  --warning: #8a7d00;
+  --warning: #6b6100;
   --warning-soft: #fbfbd0;
+  --evento-amarelo: #ffd60a;
 
   --chart-1: #007f5f;
   --chart-2: #55a630;
@@ -132,6 +134,7 @@
   --success: #80b918;
   --warning: #dddf00;
   --warning-soft: #33330f;
+  --evento-amarelo: #e6c200;
 
   --chart-1: #55a630;
   --chart-2: #80b918;
@@ -165,7 +168,12 @@
     font-size: 118.75%;
   }
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
+  }
+  /* Foco por teclado sempre visível nos botões/links feitos à mão (os do shadcn têm o próprio anel) */
+  :where(button, a, summary, [role='button']):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
   html,
   body {
@@ -176,22 +184,39 @@
     --nav-inferior: calc(4.5rem + env(safe-area-inset-bottom));
   }
   /* iOS dá uma largura mínima própria ao campo de data, que estoura o grid */
-  input[type='date'] {
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'] {
     min-width: 0;
     -webkit-appearance: none;
     appearance: none;
   }
-  input[type='date']::-webkit-date-and-time-value {
+  input[type='date']::-webkit-date-and-time-value,
+  input[type='time']::-webkit-date-and-time-value {
     text-align: left;
   }
 }
 
 /* Destaques da agenda (como as linhas amarela/verde da tabela), nos dois temas */
 @utility evento-amarelo {
-  background-color: color-mix(in oklab, #ffe24d 45%, var(--card));
+  background-color: color-mix(in oklab, var(--evento-amarelo) 45%, var(--card));
   color: var(--foreground);
 }
 @utility evento-verde {
   background-color: color-mix(in oklab, var(--success) 28%, var(--card));
   color: var(--foreground);
+}
+
+/* Margem lateral que respeita o entalhe do iPhone deitado (viewport-fit=cover) */
+@utility px-safe {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/* Celular: com o teclado aberto, o menu inferior sairia flutuando em cima dele — esconde */
+@media (pointer: coarse) {
+  body:has(:is(input:not([type='checkbox'], [type='radio'], [type='button'], [type='submit']), textarea):focus)
+    .nav-inferior {
+    display: none;
+  }
 }

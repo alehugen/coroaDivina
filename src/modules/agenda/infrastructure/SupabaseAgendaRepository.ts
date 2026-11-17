@@ -1,4 +1,4 @@
-import { supabase } from '@/shared/lib/supabase'
+import { exigir, supabase } from '@/shared/lib/supabase'
 import type { AgendaRepository } from '../application/ports/AgendaRepository'
 import type { Evento } from '../domain/Evento'
 
@@ -9,11 +9,6 @@ interface EventoRow {
   titulo: string
   detalhe: string
   cor: Evento['cor']
-}
-
-/** RLS bloqueia em silêncio: confere que a linha foi realmente afetada. */
-function exigirLinha<T>(data: T[] | null) {
-  if (!data?.length) throw new Error('SEM_PERMISSAO')
 }
 
 export const supabaseAgendaRepository: AgendaRepository = {
@@ -31,20 +26,14 @@ export const supabaseAgendaRepository: AgendaRepository = {
   },
 
   async criar(d) {
-    const { data, error } = await supabase.from('eventos').insert(d).select('id')
-    if (error) throw error
-    exigirLinha(data)
+    await exigir(supabase.from('eventos').insert(d).select('id'))
   },
 
   async atualizar(id, d) {
-    const { data, error } = await supabase.from('eventos').update(d).eq('id', id).select('id')
-    if (error) throw error
-    exigirLinha(data)
+    await exigir(supabase.from('eventos').update(d).eq('id', id).select('id'))
   },
 
   async remover(id) {
-    const { data, error } = await supabase.from('eventos').delete().eq('id', id).select('id')
-    if (error) throw error
-    exigirLinha(data)
+    await exigir(supabase.from('eventos').delete().eq('id', id).select('id'))
   },
 }

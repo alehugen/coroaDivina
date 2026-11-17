@@ -1,7 +1,8 @@
 import { podeSerOrga, type Grau } from './Grau'
 
 export type Role = 'admin' | 'socio'
-export type StatusCadastro = 'pendente' | 'aprovado' | 'rejeitado' | 'inativo'
+/** O cadastro entra ativo; a administração pode desativar. */
+export type StatusCadastro = 'aprovado' | 'inativo'
 
 /** Conta do usuário logado, com as permissões calculadas no banco. */
 export interface Conta {

@@ -44,9 +44,9 @@ const routes: RouteRecordRaw[] = [
     meta: { publica: true },
   },
   {
-    path: '/aguardando-aprovacao',
+    path: '/acesso-indisponivel',
     component: () =>
-      import('@/modules/identity/presentation/views/AguardandoAprovacaoView.vue'),
+      import('@/modules/identity/presentation/views/AcessoIndisponivelView.vue'),
   },
 
   {
@@ -151,10 +151,10 @@ router.beforeEach(async (to) => {
   }
 
   if (!session.aprovado) {
-    return to.path === '/aguardando-aprovacao' ? true : '/aguardando-aprovacao'
+    return to.path === '/acesso-indisponivel' ? true : '/acesso-indisponivel'
   }
 
-  if (to.meta.visitante || to.path === '/aguardando-aprovacao') return '/escalas'
+  if (to.meta.visitante || to.path === '/acesso-indisponivel') return '/escalas'
   if (to.meta.admin && !session.admin) return '/escalas'
   if (to.meta.painel && !session.painel) return '/escalas'
   if (to.meta.gestor && !session.gestor) return session.painel ? '/admin/socios' : '/escalas'

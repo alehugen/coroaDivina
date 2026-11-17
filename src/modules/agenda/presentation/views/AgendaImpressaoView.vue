@@ -1,30 +1,19 @@
 <script setup lang="ts">
 import { PhArrowLeft, PhCaretLeft, PhCaretRight, PhCopy, PhPrinter, PhWarningCircle, PhWhatsappLogo } from '@phosphor-icons/vue'
-import { computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, watch } from 'vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
-import { toast } from '@/shared/composables/useToast'
-import { mesDe, rotuloMes, somarMes } from '@/shared/lib/calendario'
-import { formatarData, hojeISO } from '@/shared/lib/datas'
+import { useCompartilhar } from '@/shared/composables/useCompartilhar'
+import { rotuloMes, somarMes } from '@/shared/lib/calendario'
+import { formatarData } from '@/shared/lib/datas'
 import { agruparPorData, eventosDoMes, rotuloSemana, textoWhatsAppAgenda, type CorEvento } from '../../domain/Evento'
+import { useMesDaQuery } from '../composables/useMesDaQuery'
 import { useAgendaStore } from '../stores/agenda'
 
 const store = useAgendaStore()
-const route = useRoute()
-const router = useRouter()
-
-const mes = computed(() => {
-  const q = String(route.query.mes ?? '')
-  return /^\d{4}-\d{2}$/.test(q) ? mesDe(`${q}-01`) : mesDe(hojeISO())
-})
-const chaveMes = computed(() => `${mes.value.ano}-${String(mes.value.mes + 1).padStart(2, '0')}`)
-const irPara = (m: { ano: number; mes: number }) =>
-  router.replace({ query: { mes: `${m.ano}-${String(m.mes + 1).padStart(2, '0')}` } })
-
-onMounted(() => (store.carregado ? store.garantirMes(mes.value.ano, mes.value.mes) : store.carregar(`${chaveMes.value}-01`)))
-watch(mes, (m) => store.garantirMes(m.ano, m.mes))
+const { mes, chave: chaveMes, irPara } = useMesDaQuery()
+watch(chaveMes, (c) => store.garantirMes(c), { immediate: true })
 
 const grupos = computed(() => agruparPorData(eventosDoMes(store.eventos, mes.value.ano, mes.value.mes)))
 const nomeMes = computed(() => rotuloMes(mes.value.ano, mes.value.mes).split(' de ')[0]!.toUpperCase())
@@ -33,21 +22,10 @@ const texto = computed(() =>
   textoWhatsAppAgenda(store.eventos, mes.value.ano, mes.value.mes, `${window.location.origin}/agenda?mes=${chaveMes.value}`),
 )
 
-async function copiar() {
-  try {
-    await navigator.clipboard.writeText(texto.value)
-    toast('Texto copiado. É só colar no WhatsApp.')
-  } catch {
-    toast('Não foi possível copiar automaticamente.', 'danger')
-  }
-}
-const abrirWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(texto.value)}`, '_blank', 'noopener')
-const imprimir = () => window.print()
-
-function voltar() {
-  if (window.history.length > 1) router.back()
-  else router.push({ path: '/agenda', query: { mes: chaveMes.value } })
-}
+const { copiar, abrirWhatsApp, imprimir, voltar } = useCompartilhar(texto, () => ({
+  path: '/agenda',
+  query: { mes: chaveMes.value },
+}))
 
 /** Cores da tabela usada hoje (impressão sempre em fundo branco). */
 const LINHA: Record<CorEvento, string> = { nenhuma: '', amarela: 'bg-[#ffff99]', verde: 'bg-[#92d050]' }

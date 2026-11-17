@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { PhStar, PhTrash, PhUserPlus, PhX } from '@phosphor-icons/vue'
 import { computed, ref } from 'vue'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -76,29 +75,29 @@ async function removerPessoa(i: Inscricao) {
           {{ funcao.nome }}
           <span class="ml-1 text-sm font-normal text-muted-foreground tabular-nums">{{ oc.total }}/{{ oc.vagas }}</span>
         </p>
-        <div class="mt-1.5 flex flex-wrap items-center gap-1">
-          <Badge
+        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <span
             v-for="i in [...responsaveis, ...auxiliares]"
             :key="i.id"
-            :variant="i.papel === 'responsavel' ? 'default' : 'secondary'"
-            :class="['pr-0.5', i.papel === 'responsavel' && 'bg-accent text-accent-foreground']"
+            class="inline-flex h-8 items-center gap-1 rounded-full pr-0.5 pl-2.5 text-sm"
+            :class="i.papel === 'responsavel' ? 'bg-accent text-accent-foreground' : 'bg-secondary text-secondary-foreground'"
             :title="i.papel === 'responsavel' ? 'Responsável' : 'Auxiliar'"
           >
-            <PhStar v-if="i.papel === 'responsavel'" weight="fill" data-icon="inline-start" />
+            <PhStar v-if="i.papel === 'responsavel'" weight="fill" class="size-3.5" />
             {{ i.nome }}
             <button
               type="button"
-              class="ml-0.5 rounded-full p-0.5 hover:bg-foreground/10"
+              class="flex size-7 items-center justify-center rounded-full hover:bg-foreground/10"
               :aria-label="`Remover ${i.nome}`"
               @click="removerPessoa(i)"
             >
-              <PhX class="size-3" />
+              <PhX class="size-3.5" />
             </button>
-          </Badge>
+          </span>
           <Button
             v-if="funcao.ativa && oc.total < oc.vagas"
             variant="ghost"
-            size="xs"
+            size="sm"
             class="text-primary"
             @click="modalPessoa = true"
           >

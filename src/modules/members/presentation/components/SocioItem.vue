@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  PhCheck,
   PhDotsThreeVertical,
   PhShieldCheck,
   PhShieldSlash,
@@ -50,7 +49,7 @@ const temMenu = computed(() => temAcoesAdmin.value || props.podeAlterarGrau)
 function escolherGrau(v: unknown) {
   if (typeof v === 'string' && v !== props.socio.grau) emit('grau', v as Grau)
 }
-const temBotoes = computed(() => props.acoes.aprovar || props.acoes.recusarExclusao || props.acoes.reativar)
+const temBotoes = computed(() => props.acoes.recusarExclusao || props.acoes.reativar)
 </script>
 
 <template>
@@ -64,7 +63,6 @@ const temBotoes = computed(() => props.acoes.aprovar || props.acoes.recusarExclu
           <GrauBadge :grau="socio.grau" />
           <Badge v-if="socio.role === 'admin'">Admin</Badge>
           <Badge v-if="isOrga" class="bg-highlight text-highlight-foreground">Orgã</Badge>
-          <Badge v-if="socio.status === 'rejeitado'" variant="destructive">Rejeitado</Badge>
           <Badge v-if="socio.status === 'inativo'" variant="secondary">Inativo</Badge>
         </p>
         <p class="truncate text-sm text-muted-foreground">{{ socio.email }}</p>
@@ -125,14 +123,6 @@ const temBotoes = computed(() => props.acoes.aprovar || props.acoes.recusarExclu
     <!-- botões de decisão (só quando há algo a decidir) -->
     <div v-if="temBotoes" class="flex flex-wrap items-center gap-2 pl-13 sm:pl-0">
       <Spinner v-if="ocupado" class="text-primary" />
-      <template v-if="acoes.aprovar">
-        <Button size="lg" :disabled="ocupado" @click="emit('acao', 'aprovar')">
-          <PhCheck /> Aprovar
-        </Button>
-        <Button size="lg" variant="outline" :disabled="ocupado" @click="emit('acao', 'rejeitar')">
-          <PhX /> Rejeitar
-        </Button>
-      </template>
       <template v-if="acoes.recusarExclusao">
         <Button v-if="acoes.excluir" size="lg" variant="destructive" :disabled="ocupado" @click="emit('acao', 'excluir')">
           <PhTrash /> Aprovar exclusão

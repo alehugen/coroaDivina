@@ -6,7 +6,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#007f5f" />
+    <!-- cor da barra do sistema = cabeçalho (o app atualiza ao trocar o tema) -->
+    <meta name="theme-color" content="#ffffff" />
     <meta name="description" content="Escalas de trabalho do Núcleo Coroa Divina" />
     <!-- iPhone: abre em tela cheia quando adicionado à Tela de Início -->
     <meta name="mobile-web-app-capable" content="yes" />
@@ -28,7 +29,10 @@
           var dark =
             mode === 'dark' ||
             (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-          if (dark) document.documentElement.classList.add('dark')
+          if (dark) {
+            document.documentElement.classList.add('dark')
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#131c17')
+          }
           if (localStorage.getItem('escalas-texto-grande') === 'true')
             document.documentElement.classList.add('texto-grande')
         } catch (e) {}

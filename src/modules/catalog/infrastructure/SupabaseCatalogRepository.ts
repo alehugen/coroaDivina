@@ -1,4 +1,4 @@
-import { supabase } from '@/shared/lib/supabase'
+import { exigir, supabase } from '@/shared/lib/supabase'
 import type { CatalogRepository } from '../application/ports/CatalogRepository'
 import type { Area, DadosFuncao, FuncaoModelo } from '../domain/Catalogo'
 
@@ -31,12 +31,6 @@ function toFuncaoRow(d: Partial<DadosFuncao> & { ordem?: number }) {
   if (d.ativo !== undefined) row.ativo = d.ativo
   if (d.ordem !== undefined) row.ordem = d.ordem
   return row
-}
-
-async function exigir<T>(p: PromiseLike<{ data: T[] | null; error: unknown }>) {
-  const { data, error } = await p
-  if (error) throw error
-  if (!data?.length) throw new Error('SEM_PERMISSAO')
 }
 
 export const supabaseCatalogRepository: CatalogRepository = {

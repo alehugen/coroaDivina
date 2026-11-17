@@ -68,7 +68,7 @@ defineExpose({ instalar })
         </li>
         <li class="flex items-start gap-3">
           <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground">3</span>
-          <span>Toque em <strong>Adicionar</strong>. O ícone “Escalas” vai aparecer na sua tela.</span>
+          <span>Toque em <strong>Adicionar</strong>. O ícone “Coroa Divina” vai aparecer na sua tela.</span>
         </li>
       </ol>
       <DialogFooter>

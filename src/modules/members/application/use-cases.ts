@@ -14,8 +14,6 @@ import type { MembersRepository } from './ports/MembersRepository'
 export function criarUseCasesMembros(repo: MembersRepository) {
   return {
     listarSocios: () => tentar(() => repo.listarSocios()),
-    aprovar: (id: string) => tentar(() => repo.alterarStatus(id, 'aprovado')),
-    rejeitar: (id: string) => tentar(() => repo.alterarStatus(id, 'rejeitado')),
     desativar: (id: string) => tentar(() => repo.alterarStatus(id, 'inativo')),
     reativar: (id: string) => tentar(() => repo.alterarStatus(id, 'aprovado')),
     tornarAdmin: (id: string) => tentar(() => repo.alterarRole(id, 'admin')),

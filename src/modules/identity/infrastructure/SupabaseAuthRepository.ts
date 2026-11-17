@@ -1,4 +1,4 @@
-import { supabase } from '@/shared/lib/supabase'
+import { exigir, supabase } from '@/shared/lib/supabase'
 import type { AuthRepository } from '../application/ports/AuthRepository'
 import type { Conta } from '../domain/Conta'
 
@@ -73,21 +73,13 @@ export const supabaseAuthRepository: AuthRepository = {
   },
 
   async atualizarPerfil(id, { nome, telefone }) {
-    const { data, error } = await supabase.from('profiles').update({ nome, telefone }).eq('id', id).select('id')
-    if (error) throw error
-    if (!data?.length) throw new Error('SEM_PERMISSAO')
+    await exigir(supabase.from('profiles').update({ nome, telefone }).eq('id', id).select('id'))
     // Mantém o metadata do Auth coerente (nome aparece em e-mails/painel do Supabase)
     await supabase.auth.updateUser({ data: { nome, telefone } })
   },
 
   async definirLembretes(id, receber) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ receber_lembretes: receber })
-      .eq('id', id)
-      .select('id')
-    if (error) throw error
-    if (!data?.length) throw new Error('SEM_PERMISSAO')
+    await exigir(supabase.from('profiles').update({ receber_lembretes: receber }).eq('id', id).select('id'))
   },
 
   async solicitarExclusao() {

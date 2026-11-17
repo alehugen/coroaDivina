@@ -1,19 +1,17 @@
 <script setup lang="ts">
 import { PhArrowLeft, PhCopy, PhPrinter, PhWarningCircle, PhWhatsappLogo } from '@phosphor-icons/vue'
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Spinner } from '@/components/ui/spinner'
-import { toast } from '@/shared/composables/useToast'
+import { useCompartilhar } from '@/shared/composables/useCompartilhar'
 import { funcoesPorArea, rotuloDia } from '../../domain/Escala'
 import { linhasDaFuncao, textoWhatsApp } from '../../domain/Exportacao'
 import { useEscalaAtualStore } from '../stores/escalaAtual'
 
 const props = defineProps<{ id: string }>()
 const store = useEscalaAtualStore()
-const router = useRouter()
 
 watch(
   () => props.id,
@@ -38,25 +36,7 @@ const texto = computed(() =>
     : '',
 )
 
-async function copiar() {
-  try {
-    await navigator.clipboard.writeText(texto.value)
-    toast('Texto copiado. É só colar no WhatsApp.')
-  } catch {
-    toast('Não foi possível copiar automaticamente.', 'danger')
-  }
-}
-
-function abrirWhatsApp() {
-  window.open(`https://wa.me/?text=${encodeURIComponent(texto.value)}`, '_blank', 'noopener')
-}
-
-const imprimir = () => window.print()
-
-function voltar() {
-  if (window.history.length > 1) router.back()
-  else router.push(`/escalas/${props.id}`)
-}
+const { copiar, abrirWhatsApp, imprimir, voltar } = useCompartilhar(texto, () => `/escalas/${props.id}`)
 
 /** Faixa da área num tom claro da cor da área (como na planilha). */
 const faixaArea = (cor: string) => ({ backgroundColor: `${cor}66` })

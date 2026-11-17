@@ -7,7 +7,6 @@ import {
   percentual,
   preenchimento,
   rotuloDia,
-  rotuloDiaCurto,
   rotuloPeriodo,
   tituloSugerido,
   validarNovaEscala,
@@ -83,7 +82,6 @@ describe('datas', () => {
   })
   it('rótulos no estilo da planilha', () => {
     expect(rotuloDia('2026-11-20')).toBe('Sexta-feira | 20 Nov')
-    expect(rotuloDiaCurto('2026-11-21')).toBe('Sáb 21/11')
     expect(rotuloPeriodo('2026-11-20', '2026-11-23')).toBe('20/11 a 23/11/2026')
     expect(rotuloPeriodo('2026-12-30', '2027-01-02')).toBe('30/12/2026 a 02/01/2027')
     expect(tituloSugerido('2026-11-20')).toBe('Escala do Preparo – Nov 2026')

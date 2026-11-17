@@ -26,24 +26,25 @@ const socio = (p: Partial<Socio>): Socio => ({
 
 describe('Socio', () => {
   const lista = [
-    socio({ id: '1', nome: 'João Pedro', status: 'pendente', criadoEm: '2026-11-05T00:00:00Z' }),
-    socio({ id: '2', nome: 'Ana', status: 'pendente', criadoEm: '2026-11-02T00:00:00Z' }),
-    socio({ id: '3', nome: 'Lucielma', email: 'luci@x.com' }),
-    socio({ id: '4', nome: 'Isis', status: 'rejeitado', exclusaoSolicitadaEm: '2026-11-10T00:00:00Z' }),
+    socio({ id: '1', nome: 'João Pedro' }),
+    socio({ id: '2', nome: 'Ana' }),
+    socio({ id: '3', nome: 'Lucielma', email: 'luci@x.com', telefone: '41988887777' }),
+    socio({ id: '4', nome: 'Isis', status: 'inativo', exclusaoSolicitadaEm: '2026-11-10T00:00:00Z' }),
+    socio({ id: '5', nome: 'Bia', exclusaoSolicitadaEm: '2026-11-08T00:00:00Z' }),
   ]
 
-  it('conta por grupo (rejeitado conta como inativo)', () => {
-    expect(contarPorGrupo(lista)).toEqual({ pendente: 2, aprovado: 1, inativo: 1, exclusao: 1 })
+  it('conta por grupo', () => {
+    expect(contarPorGrupo(lista)).toEqual({ aprovado: 4, inativo: 1, exclusao: 2 })
   })
 
-  it('ordena pendentes do mais antigo para o mais novo', () => {
-    expect(filtrarSocios(lista, 'pendente').map((s) => s.id)).toEqual(['2', '1'])
+  it('ativos em ordem alfabética', () => {
+    expect(filtrarSocios(lista, 'aprovado').map((s) => s.id)).toEqual(['2', '5', '1', '3'])
   })
 
   it('busca ignorando acentos, por e-mail e por telefone', () => {
-    expect(filtrarSocios(lista, 'pendente', 'joao').map((s) => s.id)).toEqual(['1'])
+    expect(filtrarSocios(lista, 'aprovado', 'joao').map((s) => s.id)).toEqual(['1'])
     expect(filtrarSocios(lista, 'aprovado', 'luci@').map((s) => s.id)).toEqual(['3'])
-    expect(filtrarSocios(lista, 'aprovado', '99999').length).toBe(1)
+    expect(filtrarSocios(lista, 'aprovado', '88887').map((s) => s.id)).toEqual(['3'])
   })
 
   it('admin não pode se desativar nem remover o próprio admin', () => {
@@ -54,13 +55,14 @@ describe('Socio', () => {
     expect(acoesPermitidas(eu, 'outro').removerAdmin).toBe(true)
   })
 
-  it('pendente só pode ser aprovado ou rejeitado', () => {
-    const a = acoesPermitidas(socio({ status: 'pendente' }), 'eu')
-    expect(a).toMatchObject({ aprovar: true, rejeitar: true, desativar: false, tornarAdmin: false })
+  it('inativo só pode ser reativado', () => {
+    const a = acoesPermitidas(socio({ status: 'inativo' }), 'eu')
+    expect(a).toMatchObject({ reativar: true, desativar: false, tornarAdmin: false })
   })
 
   it('pedidos de exclusão: aba própria e ações', () => {
-    expect(filtrarSocios(lista, 'exclusao').map((s) => s.id)).toEqual(['4'])
+    // fila: pedido mais antigo primeiro
+    expect(filtrarSocios(lista, 'exclusao').map((s) => s.id)).toEqual(['5', '4'])
     const pediu = lista[3]!
     expect(acoesPermitidas(pediu, 'eu')).toMatchObject({ excluir: true, recusarExclusao: true })
     expect(acoesPermitidas(socio({ role: 'admin' }), 'eu').excluir).toBe(false)

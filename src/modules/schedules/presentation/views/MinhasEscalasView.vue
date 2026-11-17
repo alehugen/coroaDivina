@@ -19,8 +19,8 @@ const hoje = hojeISO()
 async function carregar() {
   const r = await escalas.minhasInscricoes()
   carregando.value = false
+  erro.value = r.ok ? '' : r.error
   if (r.ok) lista.value = r.value
-  else erro.value = r.error
 }
 
 // Atualiza ao vivo (ex.: a Orgã incluiu/removeu você)

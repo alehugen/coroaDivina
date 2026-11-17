@@ -1,10 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { criarUseCasesCatalogo } from '../../application/use-cases'
+import { catalogo } from '../..'
 import type { Area, AreaComFuncoes, FuncaoModelo } from '../../domain/Catalogo'
-import { supabaseCatalogRepository } from '../../infrastructure/SupabaseCatalogRepository'
-
-const catalogo = criarUseCasesCatalogo(supabaseCatalogRepository)
 
 export const useCatalogStore = defineStore('catalog', () => {
   const areas = ref<Area[]>([])

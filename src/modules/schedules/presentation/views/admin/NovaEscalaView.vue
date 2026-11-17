@@ -167,13 +167,13 @@ async function criar() {
               <span class="size-3 rounded-full" :style="{ backgroundColor: a.cor }" aria-hidden="true" />
               {{ a.nome }}
               <span class="ml-auto flex gap-1">
-                <Button type="button" variant="link" size="xs" @click="marcarArea(a.funcoes.map((f) => f.id), true)">
+                <Button type="button" variant="link" size="sm" @click="marcarArea(a.funcoes.map((f) => f.id), true)">
                   todas
                 </Button>
                 <Button
                   type="button"
                   variant="link"
-                  size="xs"
+                  size="sm"
                   class="text-muted-foreground"
                   @click="marcarArea(a.funcoes.map((f) => f.id), false)"
                 >

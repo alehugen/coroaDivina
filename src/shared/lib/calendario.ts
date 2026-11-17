@@ -33,12 +33,21 @@ export function rotuloMes(ano: number, mes: number): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-export function mesDe(data: DataISO): { ano: number; mes: number } {
+/** Mês de referência; `mes` vai de 0 a 11. */
+export interface MesRef {
+  ano: number
+  mes: number
+}
+
+/** '2026-11' */
+export const chaveDoMes = (m: MesRef): string => `${m.ano}-${String(m.mes + 1).padStart(2, '0')}`
+
+export function mesDe(data: DataISO): MesRef {
   const d = parseISO(data)
   return { ano: d.getFullYear(), mes: d.getMonth() }
 }
 
-export function somarMes(ref: { ano: number; mes: number }, n: number): { ano: number; mes: number } {
+export function somarMes(ref: MesRef, n: number): MesRef {
   const d = new Date(ref.ano, ref.mes + n, 1)
   return { ano: d.getFullYear(), mes: d.getMonth() }
 }

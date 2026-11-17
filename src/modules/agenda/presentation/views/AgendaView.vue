@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { PhCaretLeft, PhCaretRight, PhPencilSimple, PhPlus, PhPrinter, PhWarningCircle } from '@phosphor-icons/vue'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, nextTick, ref, watch } from 'vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useSessionStore } from '@/modules/identity'
@@ -11,28 +10,21 @@ import { CarregandoConteudo, EmptyState } from '@/shared/ui'
 import { agruparPorData, eventosDoMes, porData, rotuloSemana, type CorEvento, type Evento } from '../../domain/Evento'
 import AgendaCalendario from '../components/AgendaCalendario.vue'
 import EventoFormDialog from '../components/EventoFormDialog.vue'
+import { useMesDaQuery } from '../composables/useMesDaQuery'
 import { useAgendaStore } from '../stores/agenda'
 
 const store = useAgendaStore()
 const session = useSessionStore()
-const route = useRoute()
-const router = useRouter()
 const hoje = hojeISO()
 
-// Mês na URL (?mes=2026-11): voltar/compartilhar mantém o mês
-const mes = computed(() => {
-  const q = String(route.query.mes ?? '')
-  return /^\d{4}-\d{2}$/.test(q) ? mesDe(`${q}-01`) : mesDe(hoje)
-})
-const chaveMes = computed(() => `${mes.value.ano}-${String(mes.value.mes + 1).padStart(2, '0')}`)
-
+const { mes, chave: chaveMes, irPara: irParaMes } = useMesDaQuery()
 function irPara(m: { ano: number; mes: number }) {
   selecionado.value = null
-  router.replace({ query: { ...route.query, mes: `${m.ano}-${String(m.mes + 1).padStart(2, '0')}` } })
+  irParaMes(m)
 }
 
-onMounted(() => store.carregar())
-watch(mes, (m) => store.garantirMes(m.ano, m.mes))
+// Carrega a janela em torno do mês da URL (links da agenda podem apontar para meses distantes)
+watch(chaveMes, (c) => store.garantirMes(c), { immediate: true })
 
 const doMes = computed(() => eventosDoMes(store.eventos, mes.value.ano, mes.value.mes))
 const mapa = computed(() => porData(store.eventos))
@@ -70,7 +62,7 @@ const LINHA: Record<CorEvento, string> = { nenhuma: '', amarela: 'evento-amarelo
 </script>
 
 <template>
-  <div class="flex flex-col gap-5">
+  <div class="flex flex-col gap-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 class="text-2xl font-bold">Agenda do núcleo</h1>
       <div class="flex flex-wrap gap-2">
@@ -86,11 +78,11 @@ const LINHA: Record<CorEvento, string> = { nenhuma: '', amarela: 'evento-amarelo
       <Button variant="outline" size="icon-lg" aria-label="Mês anterior" @click="irPara(somarMes(mes, -1))">
         <PhCaretLeft />
       </Button>
-      <h2 class="flex-1 text-center text-lg font-semibold" aria-live="polite">{{ rotuloMes(mes.ano, mes.mes) }}</h2>
+      <h2 class="min-w-0 flex-1 text-center font-semibold sm:text-lg" aria-live="polite">{{ rotuloMes(mes.ano, mes.mes) }}</h2>
       <Button variant="outline" size="icon-lg" aria-label="Próximo mês" @click="irPara(somarMes(mes, 1))">
         <PhCaretRight />
       </Button>
-      <Button v-if="!hoje.startsWith(chaveMes)" variant="ghost" @click="irPara(mesDe(hoje))">Hoje</Button>
+      <Button variant="ghost" :disabled="hoje.startsWith(chaveMes)" @click="irPara(mesDe(hoje))">Hoje</Button>
     </div>
 
     <Alert v-if="store.erro" variant="destructive">

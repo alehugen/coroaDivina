@@ -36,7 +36,8 @@ watch(aberto, async (v) => {
   erro.value = ''
   profileId.value = ''
   papel.value = vagasLivres(props.funcao, 'responsavel') > 0 ? 'responsavel' : 'auxiliar'
-  if (!membros.socios.length) await membros.carregarSocios()
+  // sempre atualiza: quem acabou de se cadastrar já aparece (a lista anterior fica visível enquanto isso)
+  await membros.carregarSocios()
 })
 
 const opcoesSocios = computed(() => {

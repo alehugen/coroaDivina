@@ -1,12 +1,9 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { hojeISO } from '@/shared/lib/datas'
-import { criarUseCasesMembros } from '../../application/use-cases'
 import { situacao, type Mandato } from '../../domain/Mandato'
 import { contarPorGrupo, type Socio } from '../../domain/Socio'
-import { supabaseMembersRepository } from '../../infrastructure/SupabaseMembersRepository'
-
-const membros = criarUseCasesMembros(supabaseMembersRepository)
+import { membros } from '../..'
 
 export const useMembersStore = defineStore('members', () => {
   const socios = ref<Socio[]>([])
@@ -31,16 +28,16 @@ export const useMembersStore = defineStore('members', () => {
     carregandoSocios.value = true
     const r = await membros.listarSocios()
     carregandoSocios.value = false
+    erro.value = r.ok ? '' : r.error
     if (r.ok) socios.value = r.value
-    else erro.value = r.error
   }
 
   async function carregarMandatos() {
     carregandoMandatos.value = true
     const r = await membros.listarMandatos()
     carregandoMandatos.value = false
+    erro.value = r.ok ? '' : r.error
     if (r.ok) mandatos.value = r.value
-    else erro.value = r.error
   }
 
   return {

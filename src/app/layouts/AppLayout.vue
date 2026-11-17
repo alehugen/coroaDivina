@@ -42,16 +42,12 @@ const abaAtiva = computed(() => links.value.findIndex((l) => route.path.startsWi
 const instalarApp = ref<InstanceType<typeof InstalarApp>>()
 const { modo: modoInstalacao } = useInstalarApp()
 
-async function sair() {
-  await session.sair()
-  router.replace('/entrar')
-}
 </script>
 
 <template>
   <div class="flex min-h-dvh flex-col pb-(--nav-inferior) md:pb-0">
     <header class="sticky top-0 z-20 border-b bg-card/90 backdrop-blur">
-      <div class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
+      <div class="mx-auto flex h-16 max-w-6xl items-center gap-4 px-safe sm:px-6">
         <RouterLink to="/escalas" class="shrink-0"><AppLogo /></RouterLink>
 
         <nav class="hidden flex-1 items-center gap-1 md:flex" aria-label="Principal">
@@ -95,7 +91,7 @@ async function sair() {
                 <PhDeviceMobile />
                 Instalar o app
               </DropdownMenuItem>
-              <DropdownMenuItem @select="sair">
+              <DropdownMenuItem @select="session.sair()">
                 <PhSignOut />
                 Sair
               </DropdownMenuItem>
@@ -107,7 +103,7 @@ async function sair() {
 
     <InstalarApp ref="instalarApp" />
 
-    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
+    <main class="mx-auto w-full max-w-6xl flex-1 px-safe py-6 sm:px-6">
       <!-- Troca de tela: a antiga sai para a esquerda e a nova entra (0,2s); some com "reduzir movimento" -->
       <RouterView v-slot="{ Component, route: r }">
         <Transition
@@ -124,7 +120,7 @@ async function sair() {
 
     <!-- navegação inferior no celular, com pílula que desliza até a aba ativa -->
     <nav
-      class="fixed inset-x-0 bottom-0 z-20 border-t bg-card/95 px-2 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden"
+      class="nav-inferior fixed inset-x-0 bottom-0 z-20 border-t bg-card/95 px-2 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] backdrop-blur md:hidden"
       aria-label="Principal"
     >
       <div class="relative flex">

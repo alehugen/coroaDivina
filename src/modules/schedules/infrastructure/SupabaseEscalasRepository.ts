@@ -1,4 +1,4 @@
-import { supabase } from '@/shared/lib/supabase'
+import { exigir, supabase } from '@/shared/lib/supabase'
 import type { EscalasRepository, PatchFuncaoDia } from '../application/ports/EscalasRepository'
 import type {
   AreaRef,
@@ -58,12 +58,6 @@ const toEscala = (r: EscalaRow): Escala => ({
   dataFim: r.data_fim,
   status: r.status,
 })
-
-async function exigir<T>(p: PromiseLike<{ data: T[] | null; error: unknown }>) {
-  const { data, error } = await p
-  if (error) throw error
-  if (!data?.length) throw new Error('SEM_PERMISSAO')
-}
 
 export const supabaseEscalasRepository: EscalasRepository = {
   async listar() {
@@ -247,11 +241,17 @@ export const supabaseEscalasRepository: EscalasRepository = {
   },
 
   observarInscricoes(aoMudar) {
+    // Uma rajada de mudanças (ex.: Orgã remove várias pessoas) vira uma única recarga
+    let timer: ReturnType<typeof setTimeout> | undefined
     const canal = supabase
       .channel(`inscricoes-${Math.random().toString(36).slice(2)}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'inscricoes' }, () => aoMudar())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inscricoes' }, () => {
+        clearTimeout(timer)
+        timer = setTimeout(aoMudar, 400)
+      })
       .subscribe()
     return () => {
+      clearTimeout(timer)
       supabase.removeChannel(canal)
     }
   },

@@ -23,7 +23,7 @@ const CHIP: Record<CorEvento, string> = {
 }
 const FAIXA: Record<CorEvento, string> = {
   nenhuma: 'bg-muted-foreground/60',
-  amarela: 'bg-[#e6c200]',
+  amarela: 'bg-evento-amarelo',
   verde: 'bg-success',
 }
 

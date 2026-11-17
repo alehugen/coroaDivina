@@ -17,7 +17,7 @@ const abas = computed(() =>
       label: 'Sócios',
       icone: PhUsers,
       // pendências (aprovação/exclusão) são decisões do admin
-      contador: session.admin ? store.contagem.pendente + store.contagem.exclusao : 0,
+      contador: session.admin ? store.contagem.exclusao : 0,
       visivel: session.defineGrau,
     },
     { to: '/admin/orgas', label: 'Orgãs', icone: PhCrown, visivel: session.admin },
@@ -58,7 +58,7 @@ watch(
           <span
             v-if="a.contador"
             class="rounded-full bg-highlight px-1.5 text-xs font-semibold text-highlight-foreground"
-            :aria-label="`${a.contador} pendentes`"
+            :aria-label="`${a.contador} pedidos de exclusão`"
           >
             {{ a.contador }}
           </span>

@@ -192,12 +192,6 @@ const capitalizar = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 export const rotuloDia = (data: DataISO) =>
   `${capitalizar(formatarData(data, 'EEEE'))} | ${formatarData(data, 'dd')} ${capitalizar(formatarData(data, 'MMM'))}`
 
-const DIAS_CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as const
-
-/** "Sex 20/11" */
-export const rotuloDiaCurto = (data: DataISO) =>
-  `${DIAS_CURTOS[parseISO(data).getDay()]} ${formatarData(data, 'dd/MM')}`
-
 /** "20/11 a 23/11/2026" */
 export function rotuloPeriodo(inicio: DataISO, fim: DataISO): string {
   if (inicio === fim) return formatarData(inicio)

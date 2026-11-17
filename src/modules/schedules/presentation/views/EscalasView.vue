@@ -64,7 +64,7 @@ const proximo = computed(() => {
       <h1 class="text-2xl font-bold">Escalas</h1>
       <div class="flex flex-wrap items-center gap-2">
         <Tabs v-if="modo === 'lista'" v-model="filtro">
-          <TabsList class="h-9!">
+          <TabsList class="h-11!">
             <TabsTrigger value="atuais" class="gap-1.5 px-3">
               Atuais e próximas <span class="text-xs text-muted-foreground tabular-nums">{{ atuais.length }}</span>
             </TabsTrigger>
@@ -74,7 +74,7 @@ const proximo = computed(() => {
           </TabsList>
         </Tabs>
         <Tabs v-model="modo">
-          <TabsList class="h-9!">
+          <TabsList class="h-11!">
             <TabsTrigger value="lista" class="px-3" aria-label="Ver em lista"><PhListBullets /> Lista</TabsTrigger>
             <TabsTrigger value="calendario" class="px-3" aria-label="Ver em calendário">
               <PhCalendarDots /> Calendário

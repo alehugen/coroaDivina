@@ -17,25 +17,22 @@ export interface Socio {
 }
 
 /**
- * Abas do painel. Rejeitados entram em "inativos".
+ * Abas do painel: ativos e inativos.
  * "exclusao" é transversal: quem pediu exclusão, em qualquer status.
  */
-export type GrupoStatus = 'pendente' | 'aprovado' | 'inativo' | 'exclusao'
-
-export const grupoDe = (s: Pick<Socio, 'status'>): Exclude<GrupoStatus, 'exclusao'> =>
-  s.status === 'pendente' ? 'pendente' : s.status === 'aprovado' ? 'aprovado' : 'inativo'
+export type GrupoStatus = 'aprovado' | 'inativo' | 'exclusao'
 
 export function contarPorGrupo(socios: Socio[]): Record<GrupoStatus, number> {
-  const c = { pendente: 0, aprovado: 0, inativo: 0, exclusao: 0 }
+  const c = { aprovado: 0, inativo: 0, exclusao: 0 }
   for (const s of socios) {
-    c[grupoDe(s)]++
+    c[s.status]++
     if (s.exclusaoSolicitadaEm) c.exclusao++
   }
   return c
 }
 
 const pertence = (s: Socio, grupo: GrupoStatus) =>
-  grupo === 'exclusao' ? !!s.exclusaoSolicitadaEm : grupoDe(s) === grupo
+  grupo === 'exclusao' ? !!s.exclusaoSolicitadaEm : s.status === grupo
 
 export function filtrarSocios(socios: Socio[], grupo: GrupoStatus, busca = ''): Socio[] {
   const q = normalizar(busca)
@@ -50,16 +47,13 @@ export function filtrarSocios(socios: Socio[], grupo: GrupoStatus, busca = ''): 
         (digitos.length >= 3 && s.telefone.includes(digitos)),
     )
     .sort((a, b) => {
-      // filas (pendentes / pedidos de exclusão): mais antigos primeiro; demais: alfabético
-      if (grupo === 'pendente') return a.criadoEm.localeCompare(b.criadoEm)
+      // pedidos de exclusão: mais antigos primeiro; demais: alfabético
       if (grupo === 'exclusao') return a.exclusaoSolicitadaEm!.localeCompare(b.exclusaoSolicitadaEm!)
       return a.nome.localeCompare(b.nome, 'pt-BR')
     })
 }
 
 export interface AcoesSocio {
-  aprovar: boolean
-  rejeitar: boolean
   desativar: boolean
   reativar: boolean
   tornarAdmin: boolean
@@ -73,10 +67,8 @@ export interface AcoesSocio {
 export function acoesPermitidas(s: Socio, meuId: string): AcoesSocio {
   const euMesmo = s.id === meuId
   return {
-    aprovar: s.status === 'pendente',
-    rejeitar: s.status === 'pendente',
     desativar: s.status === 'aprovado' && !euMesmo,
-    reativar: s.status === 'inativo' || s.status === 'rejeitado',
+    reativar: s.status === 'inativo',
     tornarAdmin: s.status === 'aprovado' && s.role !== 'admin',
     removerAdmin: s.status === 'aprovado' && s.role === 'admin' && !euMesmo,
     // Admin precisa perder o papel de admin antes (evita excluir admins por engano)
