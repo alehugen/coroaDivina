@@ -13,6 +13,7 @@ interface ProfileRow {
   created_at: string
   aprovado_em: string | null
   exclusao_solicitada_em: string | null
+  grau: Socio['grau']
 }
 
 interface MandatoRow {
@@ -32,7 +33,7 @@ export const supabaseMembersRepository: MembersRepository = {
   async listarSocios() {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, nome, email, telefone, role, status, created_at, aprovado_em, exclusao_solicitada_em')
+      .select('id, nome, email, telefone, role, status, created_at, aprovado_em, exclusao_solicitada_em, grau')
       .order('nome')
       .returns<ProfileRow[]>()
     if (error) throw error
@@ -46,6 +47,7 @@ export const supabaseMembersRepository: MembersRepository = {
       criadoEm: r.created_at,
       aprovadoEm: r.aprovado_em,
       exclusaoSolicitadaEm: r.exclusao_solicitada_em,
+      grau: r.grau,
     }))
   },
 
@@ -59,6 +61,11 @@ export const supabaseMembersRepository: MembersRepository = {
     const { data, error } = await supabase.from('profiles').update({ role }).eq('id', id).select('id')
     if (error) throw error
     exigirLinha(data)
+  },
+
+  async definirGrau(id, grau) {
+    const { error } = await supabase.rpc('definir_grau', { p_profile_id: id, p_grau: grau })
+    if (error) throw error
   },
 
   async excluirConta(id) {

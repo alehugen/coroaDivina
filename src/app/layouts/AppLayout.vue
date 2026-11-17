@@ -2,6 +2,7 @@
 import {
   PhCalendarCheck,
   PhCalendarDots,
+  PhCalendarStar,
   PhGearSix,
   PhDeviceMobile,
   PhSignOut,
@@ -19,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { primeiroNome, useSessionStore } from '@/modules/identity'
+import { GrauBadge, primeiroNome, useSessionStore } from '@/modules/identity'
 import { useInstalarApp } from '@/shared/composables/useInstalarApp'
 import { AppLogo, InstalarApp, ThemeToggle, UserAvatar } from '@/shared/ui'
 
@@ -28,9 +29,10 @@ const router = useRouter()
 
 const links = computed(() =>
   [
-    { to: '/escalas', label: 'Escalas', icone: PhCalendarDots, visivel: true },
-    { to: '/minhas-escalas', label: 'Minhas escalas', icone: PhCalendarCheck, visivel: true },
-    { to: '/admin', label: 'Administração', icone: PhGearSix, visivel: session.gestor },
+    { to: '/escalas', label: 'Escalas', curto: 'Escalas', icone: PhCalendarDots, visivel: true },
+    { to: '/minhas-escalas', label: 'Minhas escalas', curto: 'Minhas', icone: PhCalendarCheck, visivel: true },
+    { to: '/agenda', label: 'Agenda', curto: 'Agenda', icone: PhCalendarStar, visivel: true },
+    { to: '/admin', label: 'Administração', curto: 'Admin', icone: PhGearSix, visivel: session.painel },
   ].filter((l) => l.visivel),
 )
 
@@ -79,6 +81,7 @@ async function sair() {
                 <span class="truncate text-foreground">{{ session.conta?.nome }}</span>
                 <span class="truncate text-xs font-normal text-muted-foreground">{{ session.conta?.email }}</span>
                 <span class="flex gap-1">
+                  <GrauBadge v-if="session.conta" :grau="session.conta.grau" />
                   <Badge v-if="session.admin">Admin</Badge>
                   <Badge v-if="session.conta?.isOrga" class="bg-highlight text-highlight-foreground">Orgã</Badge>
                 </span>
@@ -139,7 +142,8 @@ async function sair() {
           active-class="!text-primary"
         >
           <component :is="l.icone" class="size-6" :weight="route.path.startsWith(l.to) ? 'fill' : 'regular'" />
-          {{ l.label }}
+          <!-- com 4 abas, o rótulo curto cabe numa linha mesmo com "Texto maior" -->
+          <span class="whitespace-nowrap">{{ links.length > 3 ? l.curto : l.label }}</span>
         </RouterLink>
       </div>
     </nav>

@@ -8,8 +8,12 @@ declare module 'vue-router' {
     visitante?: boolean
     /** Acessível com ou sem sessão. */
     publica?: boolean
-    /** Exige admin ou Orgã vigente. */
+    /** Exige admin ou Orgã vigente (CDC/QM). */
     gestor?: boolean
+    /** Exige quem gerencia escalas ou define grau (área de Administração). */
+    painel?: boolean
+    /** Exige admin ou QM (definir grau dos sócios). */
+    grau?: boolean
     /** Exige admin. */
     admin?: boolean
   }
@@ -51,6 +55,11 @@ const routes: RouteRecordRaw[] = [
     props: true,
   },
 
+  {
+    path: '/agenda/imprimir',
+    component: () => import('@/modules/agenda/presentation/views/AgendaImpressaoView.vue'),
+  },
+
   // --- app (sócio aprovado)
   {
     path: '/',
@@ -70,39 +79,47 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/modules/identity/presentation/views/PerfilView.vue'),
       },
       {
+        path: 'agenda',
+        component: () => import('@/modules/agenda/presentation/views/AgendaView.vue'),
+      },
+      {
         path: 'minhas-escalas',
         component: () => import('@/modules/schedules/presentation/views/MinhasEscalasView.vue'),
       },
       {
         path: 'admin',
         component: () => import('@/modules/members/presentation/views/AdminLayout.vue'),
-        meta: { gestor: true },
+        meta: { painel: true },
         children: [
-          { path: '', redirect: '/admin/escalas' },
+          { path: '', redirect: () => (useSessionStore().gestor ? '/admin/escalas' : '/admin/socios') },
           {
             path: 'escalas',
             component: () =>
               import('@/modules/schedules/presentation/views/admin/EscalasAdminView.vue'),
+            meta: { gestor: true },
           },
           {
             path: 'escalas/nova',
             component: () =>
               import('@/modules/schedules/presentation/views/admin/NovaEscalaView.vue'),
+            meta: { gestor: true },
           },
           {
             path: 'escalas/:id',
             component: () =>
               import('@/modules/schedules/presentation/views/admin/EscalaEditorView.vue'),
             props: true,
+            meta: { gestor: true },
           },
           {
             path: 'funcoes',
             component: () => import('@/modules/catalog/presentation/views/FuncoesView.vue'),
+            meta: { gestor: true },
           },
           {
             path: 'socios',
             component: () => import('@/modules/members/presentation/views/SociosView.vue'),
-            meta: { admin: true },
+            meta: { grau: true },
           },
           {
             path: 'orgas',
@@ -139,6 +156,8 @@ router.beforeEach(async (to) => {
 
   if (to.meta.visitante || to.path === '/aguardando-aprovacao') return '/escalas'
   if (to.meta.admin && !session.admin) return '/escalas'
-  if (to.meta.gestor && !session.gestor) return '/escalas'
+  if (to.meta.painel && !session.painel) return '/escalas'
+  if (to.meta.gestor && !session.gestor) return session.painel ? '/admin/socios' : '/escalas'
+  if (to.meta.grau && !session.defineGrau) return '/escalas'
   return true
 })

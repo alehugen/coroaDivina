@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { isAdmin, isAprovado, isGestor, type Conta } from '../../domain/Conta'
+import { isAdmin, isAprovado, isGestor, podeDefinirGrau, podeEditarAgenda, type Conta } from '../../domain/Conta'
 import { supabaseAuthRepository as repo } from '../../infrastructure/SupabaseAuthRepository'
 
 export const useSessionStore = defineStore('session', () => {
@@ -12,6 +12,10 @@ export const useSessionStore = defineStore('session', () => {
   const aprovado = computed(() => isAprovado(conta.value))
   const admin = computed(() => isAdmin(conta.value))
   const gestor = computed(() => isGestor(conta.value))
+  const editaAgenda = computed(() => podeEditarAgenda(conta.value))
+  const defineGrau = computed(() => podeDefinirGrau(conta.value))
+  /** Vê a área de Administração (escalas, ou ao menos os sócios para definir grau) */
+  const painel = computed(() => gestor.value || defineGrau.value)
 
   /**
    * Recarrega a conta. `null` = sem sessão ou conta inexistente (ex.: excluída).
@@ -43,5 +47,5 @@ export const useSessionStore = defineStore('session', () => {
     conta.value = null
   }
 
-  return { conta, carregado, logado, aprovado, admin, gestor, init, recarregar, sair }
+  return { conta, carregado, logado, aprovado, admin, gestor, editaAgenda, defineGrau, painel, init, recarregar, sair }
 })

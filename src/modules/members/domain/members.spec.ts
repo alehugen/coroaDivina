@@ -20,6 +20,7 @@ const socio = (p: Partial<Socio>): Socio => ({
   criadoEm: '2026-11-01T10:00:00Z',
   aprovadoEm: null,
   exclusaoSolicitadaEm: null,
+  grau: 'QS',
   ...p,
 })
 

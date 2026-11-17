@@ -10,15 +10,22 @@ const store = useMembersStore()
 
 const abas = computed(() =>
   [
-    { to: '/admin/escalas', label: 'Escalas', icone: PhCalendarDots, visivel: true },
-    { to: '/admin/funcoes', label: 'Funções', icone: PhListChecks, visivel: true },
-    { to: '/admin/socios', label: 'Sócios', icone: PhUsers, contador: store.contagem.pendente + store.contagem.exclusao, visivel: session.admin },
+    { to: '/admin/escalas', label: 'Escalas', icone: PhCalendarDots, visivel: session.gestor },
+    { to: '/admin/funcoes', label: 'Funções', icone: PhListChecks, visivel: session.gestor },
+    {
+      to: '/admin/socios',
+      label: 'Sócios',
+      icone: PhUsers,
+      // pendências (aprovação/exclusão) são decisões do admin
+      contador: session.admin ? store.contagem.pendente + store.contagem.exclusao : 0,
+      visivel: session.defineGrau,
+    },
     { to: '/admin/orgas', label: 'Orgãs', icone: PhCrown, visivel: session.admin },
   ].filter((a) => a.visivel),
 )
 
 onMounted(() => {
-  if (session.admin && !store.socios.length) store.carregarSocios()
+  if (session.defineGrau && !store.socios.length) store.carregarSocios()
 })
 
 // No celular as abas rolam: mantém a aba ativa à vista

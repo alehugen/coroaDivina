@@ -15,6 +15,8 @@ import { formatarData } from '@/shared/lib/datas'
 import { FormInput } from '@/shared/ui'
 import { identidade } from '../..'
 import { SENHA_MIN, type ErrosPerfil } from '../../domain/Cadastro'
+import { NOME_GRAU } from '../../domain/Grau'
+import GrauBadge from '../components/GrauBadge.vue'
 import { formatarTelefone, mascararTelefone } from '../../domain/Telefone'
 import { useSessionStore } from '../stores/session'
 
@@ -110,7 +112,12 @@ async function desistirExclusao() {
 
 <template>
   <div class="mx-auto flex max-w-xl flex-col gap-6">
-    <h1 class="text-2xl font-bold">Meu perfil</h1>
+    <div class="flex flex-col gap-1">
+      <h1 class="text-2xl font-bold">Meu perfil</h1>
+      <p v-if="session.conta" class="flex items-center gap-2 text-sm text-muted-foreground">
+        <GrauBadge :grau="session.conta.grau" /> {{ NOME_GRAU[session.conta.grau] }}
+      </p>
+    </div>
 
     <Card>
       <CardHeader>

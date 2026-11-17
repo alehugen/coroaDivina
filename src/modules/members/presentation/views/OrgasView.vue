@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FieldGroup } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { useSessionStore } from '@/modules/identity'
+import { GrauBadge, podeSerOrga, useSessionStore } from '@/modules/identity'
 import { confirmar } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
 import { formatarData, hojeISO } from '@/shared/lib/datas'
@@ -36,7 +36,11 @@ watch(
   },
 )
 
-const opcoesSocios = computed(() => store.aprovados.map((s) => ({ value: s.id, label: s.nome })))
+// Só CDC e QM podem ser Orgã
+const opcoesSocios = computed(() =>
+  store.aprovados.filter((s) => podeSerOrga(s.grau)).map((s) => ({ value: s.id, label: `${s.nome} (${s.grau})` })),
+)
+const grauDe = (profileId: string) => store.socios.find((s) => s.id === profileId)?.grau
 const conflitos = computed(() =>
   form.profileId && form.inicio && form.fim ? sobreposicoes(form, store.mandatos) : [],
 )
@@ -117,7 +121,10 @@ async function remover(m: Mandato) {
     <Card>
       <CardHeader>
         <CardTitle>Novo mandato de Orgã</CardTitle>
-        <CardDescription>O cargo é rotativo. Durante o período, a pessoa pode criar e gerenciar escalas.</CardDescription>
+        <CardDescription>
+          O cargo é rotativo. Durante o período, a pessoa pode criar e gerenciar escalas. Só CDC e QM podem ser
+          Orgã.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form novalidate @submit.prevent="criar">
@@ -127,6 +134,9 @@ async function remover(m: Mandato) {
               <AlertDescription>{{ erroForm }}</AlertDescription>
             </Alert>
             <FormSelect v-model="form.profileId" label="Sócio" placeholder="Selecione…" :opcoes="opcoesSocios" required />
+            <p v-if="!store.carregandoSocios && !opcoesSocios.length" class="-mt-2 text-sm text-muted-foreground">
+              Nenhum sócio CDC ou QM ainda. Defina o grau na aba Sócios.
+            </p>
             <div class="grid grid-cols-2 gap-3">
               <FormInput v-model="form.inicio" label="Início" type="date" required />
               <FormInput v-model="form.fim" label="Fim" type="date" required @update:model-value="fimEditado = true" />
@@ -171,7 +181,14 @@ async function remover(m: Mandato) {
               <div class="min-w-0 flex-1">
                 <p class="flex flex-wrap items-center gap-2 font-medium">
                   {{ m.nome }}
+                  <GrauBadge v-if="grauDe(m.profileId)" :grau="grauDe(m.profileId)!" />
                   <Badge v-if="s.chave === 'vigente'" class="bg-highlight text-highlight-foreground">Orgã atual</Badge>
+                </p>
+                <p
+                  v-if="s.chave !== 'encerrado' && grauDe(m.profileId) && !podeSerOrga(grauDe(m.profileId)!)"
+                  class="text-sm font-medium text-warning"
+                >
+                  Sem grau CDC/QM: não consegue gerenciar escalas.
                 </p>
                 <p class="text-sm text-muted-foreground">{{ formatarData(m.inicio) }} a {{ formatarData(m.fim) }}</p>
               </div>

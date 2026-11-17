@@ -16,10 +16,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Spinner } from '@/components/ui/spinner'
+import { GRAUS, GrauBadge, NOME_GRAU, type Grau } from '@/modules/identity'
 import { formatarTelefone } from '@/modules/identity/domain/Telefone'
 import { formatarData } from '@/shared/lib/datas'
 import { UserAvatar } from '@/shared/ui'
@@ -31,14 +35,21 @@ const props = defineProps<{
   isOrga: boolean
   euMesmo: boolean
   ocupado: boolean
+  /** Admin ou QM (QM não altera o próprio grau) */
+  podeAlterarGrau: boolean
 }>()
 
-const emit = defineEmits<{ acao: [acao: keyof AcoesSocio] }>()
+const emit = defineEmits<{ acao: [acao: keyof AcoesSocio]; grau: [grau: Grau] }>()
 
 const whatsapp = computed(() => linkWhatsApp(props.socio.telefone))
-const temMenu = computed(
+const temAcoesAdmin = computed(
   () => props.acoes.tornarAdmin || props.acoes.removerAdmin || props.acoes.desativar || props.acoes.excluir,
 )
+const temMenu = computed(() => temAcoesAdmin.value || props.podeAlterarGrau)
+
+function escolherGrau(v: unknown) {
+  if (typeof v === 'string' && v !== props.socio.grau) emit('grau', v as Grau)
+}
 const temBotoes = computed(() => props.acoes.aprovar || props.acoes.recusarExclusao || props.acoes.reativar)
 </script>
 
@@ -50,6 +61,7 @@ const temBotoes = computed(() => props.acoes.aprovar || props.acoes.recusarExclu
         <p class="flex flex-wrap items-center gap-1.5 font-medium">
           <span class="truncate">{{ socio.nome }}</span>
           <span v-if="euMesmo" class="text-xs font-normal text-muted-foreground">(você)</span>
+          <GrauBadge :grau="socio.grau" />
           <Badge v-if="socio.role === 'admin'">Admin</Badge>
           <Badge v-if="isOrga" class="bg-highlight text-highlight-foreground">Orgã</Badge>
           <Badge v-if="socio.status === 'rejeitado'" variant="destructive">Rejeitado</Badge>
@@ -82,7 +94,17 @@ const temBotoes = computed(() => props.acoes.aprovar || props.acoes.recusarExclu
             <PhDotsThreeVertical class="size-5" weight="bold" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" class="w-60">
+          <template v-if="podeAlterarGrau">
+            <DropdownMenuLabel>Grau</DropdownMenuLabel>
+            <DropdownMenuRadioGroup :model-value="socio.grau" @update:model-value="escolherGrau">
+              <DropdownMenuRadioItem v-for="g in GRAUS" :key="g" :value="g">
+                <span class="w-9 font-semibold">{{ g }}</span>
+                <span class="text-muted-foreground">{{ NOME_GRAU[g] }}</span>
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator v-if="temAcoesAdmin" />
+          </template>
           <DropdownMenuItem v-if="acoes.tornarAdmin" @select="emit('acao', 'tornarAdmin')">
             <PhShieldCheck /> Tornar admin
           </DropdownMenuItem>

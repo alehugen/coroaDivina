@@ -4,7 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useSessionStore } from '@/modules/identity'
+import { NOME_GRAU, useSessionStore, type Grau } from '@/modules/identity'
 import { confirmar, type ConfirmOpcoes } from '@/shared/composables/useConfirm'
 import { toast } from '@/shared/composables/useToast'
 import { CarregandoConteudo, EmptyState } from '@/shared/ui'
@@ -47,6 +47,31 @@ const opcoes = computed(() => [
 
 const lista = computed(() => filtrarSocios(store.socios, grupo.value, busca.value))
 const meuId = computed(() => session.conta?.id ?? '')
+
+// QM (sem ser admin) só define o grau; as demais ações são do admin
+const SEM_ACOES: AcoesSocio = {
+  aprovar: false,
+  rejeitar: false,
+  desativar: false,
+  reativar: false,
+  tornarAdmin: false,
+  removerAdmin: false,
+  excluir: false,
+  recusarExclusao: false,
+}
+const acoesDe = (s: Socio) => (session.admin ? acoesPermitidas(s, meuId.value) : SEM_ACOES)
+const podeAlterarGrauDe = (s: Socio) =>
+  s.status === 'aprovado' && session.defineGrau && (session.admin || s.id !== meuId.value)
+
+async function alterarGrau(s: Socio, grau: Grau) {
+  ocupado.value = s.id
+  const r = await membros.definirGrau(s.id, grau)
+  ocupado.value = null
+  if (!r.ok) return toast(r.error, 'danger')
+  toast(`${s.nome} agora é ${grau} · ${NOME_GRAU[grau]}.`)
+  await store.carregarSocios()
+  if (s.id === meuId.value) await session.recarregar()
+}
 
 const ACOES: Record<keyof AcoesSocio, { confirmacao?: (s: Socio) => ConfirmOpcoes; sucesso: (s: Socio) => string }> = {
   aprovar: { sucesso: (s) => `${s.nome} foi aprovado(a) e receberá um e-mail.` },
@@ -165,11 +190,13 @@ const TITULOS_VAZIO: Record<GrupoStatus, string> = {
         v-for="s in lista"
         :key="s.id"
         :socio="s"
-        :acoes="acoesPermitidas(s, meuId)"
+        :acoes="acoesDe(s)"
+        :pode-alterar-grau="podeAlterarGrauDe(s)"
         :is-orga="store.orgasVigentes.has(s.id)"
         :eu-mesmo="s.id === meuId"
         :ocupado="ocupado === s.id"
         @acao="executar($event, s)"
+        @grau="alterarGrau(s, $event)"
       />
     </ul>
   </section>

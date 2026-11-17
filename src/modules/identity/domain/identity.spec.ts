@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validarCadastro, validarPerfil } from './Cadastro'
-import { isAdmin, isGestor, type Conta } from './Conta'
+import { isAdmin, isGestor, podeEditarAgenda, type Conta } from './Conta'
 import { criarEmail } from './Email'
 import { criarTelefone, formatarTelefone, mascararTelefone } from './Telefone'
 
@@ -87,11 +87,24 @@ describe('permissões', () => {
     isOrga: false,
     receberLembretes: true,
     exclusaoSolicitadaEm: null,
+    grau: 'QS',
   }
   it('sócio comum não é gestor', () => expect(isGestor(conta)).toBe(false))
-  it('Orgã vigente é gestor, mas não admin', () => {
-    expect(isGestor({ ...conta, isOrga: true })).toBe(true)
-    expect(isAdmin({ ...conta, isOrga: true })).toBe(false)
+  it('Orgã vigente CDC/QM é gestor, mas não admin', () => {
+    expect(isGestor({ ...conta, isOrga: true, grau: 'CDC' })).toBe(true)
+    expect(isGestor({ ...conta, isOrga: true, grau: 'QM' })).toBe(true)
+    expect(isAdmin({ ...conta, isOrga: true, grau: 'QM' })).toBe(false)
+  })
+  it('Orgã com grau abaixo de CDC não gerencia escalas', () => {
+    expect(isGestor({ ...conta, isOrga: true, grau: 'QS' })).toBe(false)
+    expect(isGestor({ ...conta, isOrga: true, grau: 'CI' })).toBe(false)
+  })
+  it('agenda e grau: admin ou QM', () => {
+    expect(podeEditarAgenda(conta)).toBe(false)
+    expect(podeEditarAgenda({ ...conta, grau: 'CDC', isOrga: true })).toBe(false)
+    expect(podeEditarAgenda({ ...conta, grau: 'QM' })).toBe(true)
+    expect(podeEditarAgenda({ ...conta, role: 'admin' })).toBe(true)
+    expect(podeEditarAgenda({ ...conta, grau: 'QM', status: 'inativo' })).toBe(false)
   })
   it('admin pendente não tem poderes', () => {
     expect(isAdmin({ ...conta, role: 'admin', status: 'pendente' })).toBe(false)

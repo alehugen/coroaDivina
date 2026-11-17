@@ -1,4 +1,5 @@
 import type { Role, StatusCadastro } from '@/modules/identity/domain/Conta'
+import type { Grau } from '@/modules/identity/domain/Grau'
 import { normalizar } from '@/shared/lib/texto'
 
 export interface Socio {
@@ -12,6 +13,7 @@ export interface Socio {
   aprovadoEm: string | null
   /** Pediu exclusão permanente (aguardando decisão do admin). */
   exclusaoSolicitadaEm: string | null
+  grau: Grau
 }
 
 /**

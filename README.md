@@ -10,9 +10,14 @@ e painel de administração.
 
 | Perfil | Como obtém | Pode |
 |---|---|---|
-| **Sócio** | Cadastro (entra na hora) | Ver escalas abertas, se inscrever em vagas livres, ver a equipe, cancelar |
-| **Orgã** | Mandato (início/fim) cadastrado pelo admin | Tudo do sócio + gerenciar escalas enquanto o mandato estiver vigente |
-| **Admin** | Definido por outro admin | Tudo + aprovar sócios, permissões e mandatos de Orgã |
+| **Sócio** | Cadastro (entra na hora, como QS) | Ver escalas e agenda, se inscrever em vagas livres, ver a equipe, cancelar |
+| **Orgã** | Mandato (início/fim) cadastrado pelo admin — só para CDC ou QM | Tudo do sócio + gerenciar escalas enquanto o mandato estiver vigente |
+| **QM** | Grau definido por admin ou outro QM | Tudo do sócio + editar a agenda e definir o grau dos sócios |
+| **Admin** | Definido por outro admin | Tudo |
+
+**Graus:** QS (Quadro de Sócios), CI (Corpo Instrutivo), CDC (Corpo do Conselho), QM (Quadro de Mestres).
+Todo cadastro novo entra como QS. As regras ficam no banco (`is_gestor()`, `pode_editar_agenda()`, `definir_grau`);
+um QM não altera o próprio grau.
 
 ## Estrutura (DDD)
 

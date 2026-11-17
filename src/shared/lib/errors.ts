@@ -27,6 +27,8 @@ const MENSAGENS: Record<string, string> = {
   INSCRICAO_INEXISTENTE: 'Essa inscrição já tinha sido removida.',
   FUNCAO_INEXISTENTE: 'Essa função não existe mais. Atualize a página.',
   EXCLUIR_A_SI_MESMO: 'Você não pode excluir a própria conta por aqui.',
+  GRAU_PROPRIO: 'Você não pode alterar o próprio grau. Peça a outro QM ou a um admin.',
+  ORGA_SEM_GRAU: 'Só sócios do Corpo do Conselho (CDC) ou do Quadro de Mestres (QM) podem ser Orgã. Ajuste o grau na aba Sócios.',
   EXCLUIR_ADMIN: 'Remova o acesso de admin antes de excluir esta conta.',
   'Failed to send a request to the Edge Function':
     'O serviço de exclusão não está disponível. Verifique se a função "excluir-conta" foi publicada.',

@@ -12,6 +12,7 @@ interface ContaRow {
   is_orga: boolean
   receber_lembretes: boolean
   exclusao_solicitada_em: string | null
+  grau: Conta['grau'] | null
 }
 
 const toConta = (r: ContaRow): Conta => ({
@@ -24,6 +25,7 @@ const toConta = (r: ContaRow): Conta => ({
   isOrga: r.is_orga,
   receberLembretes: r.receber_lembretes ?? true,
   exclusaoSolicitadaEm: r.exclusao_solicitada_em ?? null,
+  grau: r.grau ?? 'QS',
 })
 
 export const supabaseAuthRepository: AuthRepository = {
