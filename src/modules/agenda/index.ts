@@ -5,4 +5,5 @@ import { supabaseAgendaRepository } from './infrastructure/SupabaseAgendaReposit
 export const agenda = criarUseCasesAgenda(supabaseAgendaRepository)
 
 export * from './domain/Evento'
+export * from './domain/Periodo'
 export { useAgendaStore } from './presentation/stores/agenda'

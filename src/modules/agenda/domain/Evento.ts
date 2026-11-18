@@ -1,8 +1,8 @@
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { rotuloMes } from '@/shared/lib/calendario'
 import type { DataISO } from '@/shared/lib/datas'
 import { fail, ok, type Result } from '@/shared/lib/result'
+import { intervaloDoPeriodo, tituloPeriodo, type Periodo } from './Periodo'
 
 /** Destaque da linha, como na tabela usada hoje (amarelo = sessão/atividade; verde = livre). */
 export type CorEvento = 'nenhuma' | 'amarela' | 'verde'
@@ -67,6 +67,11 @@ export function eventosDoMes(lista: Evento[], ano: number, mes: number): Evento[
   return ordenarEventos(lista.filter((e) => e.data.startsWith(prefixo)))
 }
 
+export function eventosDoPeriodo(lista: Evento[], periodo: Periodo): Evento[] {
+  const { de, ate } = intervaloDoPeriodo(periodo)
+  return ordenarEventos(lista.filter((e) => e.data >= de && e.data <= ate))
+}
+
 /** Agrupa (já ordenado) por data, preservando a ordem. */
 export function agruparPorData(lista: Evento[]): { data: DataISO; eventos: Evento[] }[] {
   const grupos: { data: DataISO; eventos: Evento[] }[] = []
@@ -89,18 +94,43 @@ function linhaEvento(e: Evento): string {
   return `${emojiDe(e.cor)} ${partes.join('')}`
 }
 
+export interface GrupoDoMes {
+  chave: string
+  /** "NOVEMBRO" */
+  nome: string
+  grupos: { data: DataISO; eventos: Evento[] }[]
+}
+
+/** Divide os dias por mês (usado na exportação do ano). Meses sem evento não aparecem. */
+export function agruparPorMes(lista: Evento[]): GrupoDoMes[] {
+  const meses: GrupoDoMes[] = []
+  for (const g of agruparPorData(lista)) {
+    const chave = g.data.slice(0, 7)
+    let mes = meses[meses.length - 1]
+    if (mes?.chave !== chave) {
+      mes = { chave, nome: format(parseISO(g.data), 'MMMM', { locale: ptBR }).toUpperCase(), grupos: [] }
+      meses.push(mes)
+    }
+    mes.grupos.push(g)
+  }
+  return meses
+}
+
+const blocoDia = (g: { data: DataISO; eventos: Evento[] }) =>
+  [`*${format(parseISO(g.data), 'dd/MM')} · ${rotuloSemana(g.data)}*`, ...g.eventos.map(linhaEvento)].join('\n')
+
 /**
- * Agenda do mês em texto para o WhatsApp (*negrito*, _itálico_).
+ * Agenda do período em texto para o WhatsApp (*negrito*, _itálico_).
  * 🟡/🟢 repetem os destaques da tabela.
  */
-export function textoWhatsAppAgenda(lista: Evento[], ano: number, mes: number, link?: string): string {
-  const titulo = rotuloMes(ano, mes).replace(' de ', ' ').toUpperCase()
-  const partes: string[] = [`🗓️ *AGENDA – ${titulo}*\n_Núcleo Coroa Divina_`]
-  const grupos = agruparPorData(eventosDoMes(lista, ano, mes))
-  if (!grupos.length) partes.push('_Nenhum evento cadastrado neste mês._')
-  for (const g of grupos) {
-    partes.push([`*${format(parseISO(g.data), 'dd/MM')} · ${rotuloSemana(g.data)}*`, ...g.eventos.map(linhaEvento)].join('\n'))
-  }
+export function textoWhatsAppAgenda(lista: Evento[], periodo: Periodo, link?: string): string {
+  const partes: string[] = [`🗓️ *AGENDA – ${tituloPeriodo(periodo)}*\n_Núcleo Coroa Divina_`]
+  const eventos = eventosDoPeriodo(lista, periodo)
+  if (!eventos.length) partes.push('_Nenhum evento cadastrado neste período._')
+  else if (periodo.tipo === 'dia') partes.push(eventos.map(linhaEvento).join('\n')) // a data já está no título
+  else if (periodo.tipo === 'ano') {
+    for (const m of agruparPorMes(eventos)) partes.push(`━━ *${m.nome}* ━━`, ...m.grupos.map(blocoDia))
+  } else partes.push(...agruparPorData(eventos).map(blocoDia))
   if (link) partes.push(`Agenda completa: ${link}`)
   return partes.join('\n\n')
 }

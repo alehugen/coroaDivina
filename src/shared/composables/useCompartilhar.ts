@@ -2,6 +2,9 @@ import type { Ref } from 'vue'
 import { useRouter, type RouteLocationRaw } from 'vue-router'
 import { toast } from './useToast'
 
+/** Links muito longos falham ao abrir; acima disso (margem conservadora) o texto vai pela área de transferência. */
+const MAX_LINK_WHATSAPP = 4000
+
 /** Ações das telas de impressão: copiar o texto, abrir no WhatsApp, imprimir e voltar. */
 export function useCompartilhar(texto: Ref<string>, voltarPara: () => RouteLocationRaw) {
   const router = useRouter()
@@ -15,7 +18,19 @@ export function useCompartilhar(texto: Ref<string>, voltarPara: () => RouteLocat
     }
   }
 
-  const abrirWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(texto.value)}`, '_blank', 'noopener')
+  async function abrirWhatsApp() {
+    const link = `https://wa.me/?text=${encodeURIComponent(texto.value)}`
+    if (link.length <= MAX_LINK_WHATSAPP) {
+      window.open(link, '_blank', 'noopener')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(texto.value)
+      toast('A mensagem é longa, então foi copiada. Abra o WhatsApp e cole na conversa.')
+    } catch {
+      toast('A mensagem é longa demais para abrir direto. Use "Imprimir / PDF".', 'danger')
+    }
+  }
 
   const imprimir = () => window.print()
 

@@ -8,6 +8,7 @@ import { mesDe, rotuloMes, somarMes } from '@/shared/lib/calendario'
 import { formatarData, hojeISO, type DataISO } from '@/shared/lib/datas'
 import { CarregandoConteudo, EmptyState } from '@/shared/ui'
 import { agruparPorData, eventosDoMes, porData, rotuloSemana, type CorEvento, type Evento } from '../../domain/Evento'
+import { intervaloDoPeriodo } from '../../domain/Periodo'
 import AgendaCalendario from '../components/AgendaCalendario.vue'
 import EventoFormDialog from '../components/EventoFormDialog.vue'
 import { useMesDaQuery } from '../composables/useMesDaQuery'
@@ -23,8 +24,15 @@ function irPara(m: { ano: number; mes: number }) {
   irParaMes(m)
 }
 
-// Carrega a janela em torno do mês da URL (links da agenda podem apontar para meses distantes)
-watch(chaveMes, (c) => store.garantirMes(c), { immediate: true })
+// Ao abrir, busca de novo (outra pessoa pode ter editado); depois, só se o mês estiver fora do que já veio
+watch(
+  chaveMes,
+  (c, antes) => {
+    const { de, ate } = intervaloDoPeriodo({ tipo: 'mes', data: `${c}-01` })
+    store.garantirIntervalo(de, ate, { forcar: !antes })
+  },
+  { immediate: true },
+)
 
 const doMes = computed(() => eventosDoMes(store.eventos, mes.value.ano, mes.value.mes))
 const mapa = computed(() => porData(store.eventos))
@@ -58,6 +66,15 @@ function editar(e: Evento) {
   modal.value = true
 }
 
+// A exportação abre no mês exibido, ancorada no dia tocado (ou hoje), para trocar para Dia/Semana/Ano
+const linkExportar = computed(() => ({
+  path: '/agenda/imprimir',
+  query: {
+    periodo: 'mes',
+    data: selecionado.value ?? (hoje.startsWith(chaveMes.value) ? hoje : `${chaveMes.value}-01`),
+  },
+}))
+
 const LINHA: Record<CorEvento, string> = { nenhuma: '', amarela: 'evento-amarelo', verde: 'evento-verde' }
 </script>
 
@@ -67,7 +84,7 @@ const LINHA: Record<CorEvento, string> = { nenhuma: '', amarela: 'evento-amarelo
       <h1 class="text-2xl font-bold">Agenda do núcleo</h1>
       <div class="flex flex-wrap gap-2">
         <Button as-child variant="outline">
-          <RouterLink :to="{ path: '/agenda/imprimir', query: { mes: chaveMes } }"><PhPrinter /> Imprimir / WhatsApp</RouterLink>
+          <RouterLink :to="linkExportar"><PhPrinter /> Imprimir / WhatsApp</RouterLink>
         </Button>
         <Button v-if="session.editaAgenda" @click="novo()"><PhPlus /> Evento</Button>
       </div>
